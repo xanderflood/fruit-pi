@@ -2,6 +2,7 @@ package am2301
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/xanderflood/fruit-pi/pkg/gpio"
@@ -16,6 +17,7 @@ import (
 type State struct {
 	RH   float64
 	Temp float64
+	sync.Mutex
 }
 
 //AM2301 minimal interface
@@ -41,6 +43,9 @@ func New(pin gpio.Pin) *Impl {
 
 //Check start a monitor with the given handler hook
 func (am *Impl) Check() (State, error) {
+	am.Lock()
+	defer am.Unlock()
+
 	err := am.Request()
 	if err != nil {
 		return State{}, err
