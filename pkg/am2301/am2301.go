@@ -14,57 +14,58 @@ import (
 
 //State state of an AM2301 sensor
 type State struct {
-	RH   float32
-	Temp float32
+	RH   float64
+	Temp float64
 }
 
-//AM2301 standard implementation of a Monitor
-type AM2301 struct {
+//AM2301 minimal interface
+type AM2301 interface {
+	Check() (State, error)
+}
+
+//Impl standard implementation of a Monitor
+type Impl struct {
 	pin      gpio.Pin
 	interval time.Duration
 	mode     int // should always be 1 - something to do with restarting
 }
 
-//Start start a monitor with the given handler hook
-func (am *AM2301) Start(h func(State)) {
-	go am.watch(h)
-}
-
-func (am *AM2301) watch(h func(State)) {
-	for {
-		time.Sleep(am.interval)
-
-		err := am.Request()
-		if err != nil {
-			//TODO log these somewhere
-			continue
-		}
-
-		vals, err := am.Read()
-		if err != nil {
-			//TODO log these somewhere
-			continue
-		}
-
-		//parse the results
-		state, err := Parse(vals)
-		if err != nil {
-			//invalid checksum
-			//TODO log these somewhere
-			continue
-		}
-
-		if !state.Valid() {
-			//TODO log these somewhere
-			continue
-		}
-
-		h(state)
+//New new am2301
+func New(pin gpio.Pin) *Impl {
+	return &Impl{
+		pin:      pin,
+		interval: 100 * time.Millisecond,
+		mode:     1,
 	}
 }
 
+//Check start a monitor with the given handler hook
+func (am *Impl) Check() (State, error) {
+	err := am.Request()
+	if err != nil {
+		return State{}, err
+	}
+
+	vals, err := am.Read()
+	if err != nil {
+		return State{}, err
+	}
+
+	//parse the results
+	state, err := Parse(vals)
+	if err != nil {
+		return State{}, err
+	}
+
+	if !state.Valid() {
+		return State{}, err
+	}
+
+	return state, nil
+}
+
 //Request send the signal to request a new measurement
-func (am *AM2301) Request() error {
+func (am *Impl) Request() error {
 	// Leave it high for a while
 	am.pin.Output()
 	am.pin.High()
@@ -105,7 +106,7 @@ func (am *AM2301) Request() error {
 }
 
 //Read read a 5-byte sequence from the pin
-func (am *AM2301) Read() ([5]byte, error) {
+func (am *Impl) Read() ([5]byte, error) {
 	var vals [5]byte
 	for i := 0; i < 5; i++ {
 		for j := 7; j >= 0; j-- {
@@ -150,8 +151,8 @@ func Parse(vals [5]byte) (State, error) {
 	}
 
 	return State{
-		RH:   float32((int(vals[0])<<8)|int(vals[1])) / 10.0,
-		Temp: float32(tempSign*((int(vals[2])<<8)|int(vals[3]))) / 10.0,
+		RH:   float64((int(vals[0])<<8)|int(vals[1])) / 10.0,
+		Temp: float64(tempSign*((int(vals[2])<<8)|int(vals[3]))) / 10.0,
 	}, nil
 }
 
