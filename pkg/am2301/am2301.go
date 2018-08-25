@@ -17,7 +17,6 @@ import (
 type State struct {
 	RH   float64
 	Temp float64
-	sync.Mutex
 }
 
 //AM2301 minimal interface
@@ -30,6 +29,8 @@ type Impl struct {
 	pin      gpio.Pin
 	interval time.Duration
 	mode     int // should always be 1 - something to do with restarting
+
+	sync.Mutex
 }
 
 //New new am2301
@@ -43,8 +44,8 @@ func New(pin gpio.Pin) *Impl {
 
 //Check start a monitor with the given handler hook
 func (am *Impl) Check() (State, error) {
-	am.Lock()
-	defer am.Unlock()
+	am.Mutex.Lock()
+	defer am.Mutex.Unlock()
 
 	err := am.Request()
 	if err != nil {

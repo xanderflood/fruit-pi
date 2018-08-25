@@ -21,14 +21,14 @@ type Strategy interface {
 
 //State State
 type State struct {
-	hum bool
-	fan bool
+	Hum bool
+	Fan bool
 }
 
 //Chamber a fruiting chamber module
 type Chamber interface {
 	Setup() error
-	Refresh() error
+	Refresh() (State, am2301.State, error)
 }
 
 //Impl standard chamber implementation
@@ -55,32 +55,35 @@ func New(hum, fan, sensor int, strategy Strategy) *Impl {
 }
 
 //Refresh refresh the state error
-func (c *Impl) Refresh() error {
-	sensorState, err := c.sensor.Check()
+func (c *Impl) Refresh() (State, am2301.State, error) {
+	sState, err := c.sensor.Check()
 	if err != nil {
-		return perrors.Wrapf(err, "[chamber:%s] failed to check sensor state", c.name)
+		return State{}, am2301.State{}, perrors.Wrapf(err, "[chamber:%s] failed to check sensor state", c.name)
 	}
 
+	cState := c.strategy.Check(sState)
 	err = c.db.Insert(c.TableName(),
 		map[string]string{
 			"SensorMoment": time.Now().Format(time.RFC3339),
-			"RH":           strconv.FormatFloat(sensorState.RH, 'f', 2, 64),
-			"Temp":         strconv.FormatFloat(sensorState.Temp, 'f', 2, 64),
+			"RH":           strconv.FormatFloat(sState.RH, 'f', 2, 64),
+			"Temp":         strconv.FormatFloat(sState.Temp, 'f', 2, 64),
+			"Fan":          strconv.FormatBool(cState.Fan),
+			"Hum":          strconv.FormatBool(cState.Hum),
 		},
 	)
 
-	c.ensure(c.strategy.Check(sensorState))
-	return nil
+	c.ensure(cState)
+	return cState, sState, nil
 }
 
 func (c *Impl) ensure(state State) {
-	if state.hum {
+	if state.Hum {
 		c.hum.On()
 	} else {
 		c.hum.Off()
 	}
 
-	if state.fan {
+	if state.Fan {
 		c.fan.On()
 	} else {
 		c.fan.Off()
