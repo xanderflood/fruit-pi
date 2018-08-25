@@ -14,8 +14,8 @@ type Impl struct {
 	highOn bool
 }
 
-//NewReplay control a relay
-func NewReplay(pin gpio.Pin) *Impl {
+//New control a relay
+func New(pin gpio.Pin) *Impl {
 	pin.Output()
 
 	return &Impl{
