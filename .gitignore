@@ -1,0 +1,13 @@
+build/*
+!build/configure/.gitkeep
+!build/controller/.gitkeep
+!build/setup/.gitkeep
+
+config/*
+!config/.gitkeep
+
+.docdata/*
+!.docdata/.gitkeep
+
+cmd/api/api
+
