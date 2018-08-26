@@ -2,6 +2,7 @@ package am2301
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -85,26 +86,26 @@ func (am *Impl) Request() error {
 	am.pin.High()
 	am.pin.Input()
 	if _, err := gpio.WaitChange(am.pin, gpio.High, 100*time.Microsecond); err != nil {
-		return errors.New("unexpected sequence")
+		return errors.New("unexpected request sequence 1")
 	}
 
 	// Wait for ACK
 	if _, err := gpio.WaitChange(am.pin, gpio.Low, 100*time.Microsecond); err != nil {
-		return errors.New("unexpected sequence")
+		return errors.New("unexpected request sequence 2")
 	}
 	if _, err := gpio.WaitChange(am.pin, gpio.High, 100*time.Microsecond); err != nil {
-		return errors.New("unexpected sequence")
+		return errors.New("unexpected request sequence 3")
 	}
 
 	// When restarting, it looks like this look for start bit is not needed
 	if am.mode != 0 {
 		// Wait for the start bit
 		if _, err := gpio.WaitChange(am.pin, gpio.Low, 200*time.Microsecond); err != nil {
-			return errors.New("unexpected sequence")
+			return errors.New("unexpected request sequence 4")
 		}
 
 		if _, err := gpio.WaitChange(am.pin, gpio.High, 200*time.Microsecond); err != nil {
-			return errors.New("unexpected sequence")
+			return errors.New("unexpected request sequence 5")
 		}
 	}
 
@@ -118,7 +119,7 @@ func (am *Impl) Read() ([5]byte, error) {
 		for j := 7; j >= 0; j-- {
 			val, err := gpio.WaitChange(am.pin, gpio.Low, 500*time.Microsecond)
 			if err != nil {
-				return [5]byte{}, errors.New("unexpected signal")
+				return [5]byte{}, fmt.Errorf("unexpected read signal %v:%v:1", i, j)
 			}
 
 			if val >= 50*time.Microsecond {
@@ -127,7 +128,7 @@ func (am *Impl) Read() ([5]byte, error) {
 
 			_, err = gpio.WaitChange(am.pin, gpio.High, 500*time.Microsecond)
 			if err != nil {
-				return [5]byte{}, errors.New("unexpected signal")
+				return [5]byte{}, fmt.Errorf("unexpected read signal %v:%v:2", i, j)
 			}
 		}
 	}
