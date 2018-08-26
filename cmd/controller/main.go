@@ -40,11 +40,11 @@ func main() {
 		cfg.FanPin,
 		cfg.HumPin,
 		cfg.SensorPin,
-		nil /*TODO: strategy*/)
+		cfg.Strategy.Object)
 
 	fmt.Println("Starting chamber")
 	for {
-		time.Sleep(cfg.Interval)
+		time.Sleep(cfg.Interval.Duration)
 
 		fmt.Println("Refreshing chamber")
 		cState, sState, err := c.Refresh()

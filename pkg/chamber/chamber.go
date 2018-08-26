@@ -17,6 +17,7 @@ import (
 //Strategy Strategy
 type Strategy interface {
 	Check(am2301.State) State
+	Configuration() interface{}
 }
 
 //State State
