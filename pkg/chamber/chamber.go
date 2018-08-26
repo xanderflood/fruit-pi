@@ -10,7 +10,6 @@ import (
 	dbsdk "github.com/xanderflood/database/lib/sdk"
 
 	"github.com/xanderflood/fruit-pi/pkg/am2301"
-	"github.com/xanderflood/fruit-pi/pkg/gpio"
 	"github.com/xanderflood/fruit-pi/pkg/relay"
 )
 
@@ -45,13 +44,17 @@ type Impl struct {
 	state State
 }
 
-//New initialze `a chamber
-func New(hum, fan, sensor int, strategy Strategy) *Impl {
+//New initialze a new chamber
+func New(
+	hum, fan relay.Relay,
+	sensor am2301.AM2301,
+	strategy Strategy,
+) *Impl {
 	return &Impl{
+		hum:      hum,
+		fan:      fan,
+		sensor:   sensor,
 		strategy: strategy,
-		hum:      relay.New(gpio.Open(hum)),
-		fan:      relay.New(gpio.Open(fan)),
-		sensor:   am2301.New(gpio.Open(sensor)),
 	}
 }
 

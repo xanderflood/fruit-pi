@@ -6,10 +6,15 @@ import (
 	"os"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	flags "github.com/jessevdk/go-flags"
 	rpio "github.com/stianeikeland/go-rpio"
+
+	"github.com/xanderflood/fruit-pi/pkg/am2301"
 	"github.com/xanderflood/fruit-pi/pkg/chamber"
 	"github.com/xanderflood/fruit-pi/pkg/config"
+	"github.com/xanderflood/fruit-pi/pkg/gpio"
+	"github.com/xanderflood/fruit-pi/pkg/relay"
 )
 
 var opts struct {
@@ -42,10 +47,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+	fmt.Println("CONFIG DUMP")
+	spew.Dump(cfg)
+
 	c := chamber.New(
-		cfg.FanPin,
-		cfg.HumPin,
-		cfg.SensorPin,
+		relay.New(gpio.Open(cfg.FanPin)),
+		relay.New(gpio.Open(cfg.HumPin)),
+		am2301.New(gpio.Open(cfg.SensorPin)),
 		cfg.Strategy.Object)
 
 	fmt.Println("Starting chamber")

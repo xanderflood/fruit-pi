@@ -6,8 +6,11 @@ import (
 	"os"
 
 	flags "github.com/jessevdk/go-flags"
+	"github.com/xanderflood/fruit-pi/pkg/am2301"
 	"github.com/xanderflood/fruit-pi/pkg/chamber"
 	"github.com/xanderflood/fruit-pi/pkg/config"
+	"github.com/xanderflood/fruit-pi/pkg/gpio"
+	"github.com/xanderflood/fruit-pi/pkg/relay"
 )
 
 var opts struct {
@@ -36,10 +39,10 @@ func main() {
 	}
 
 	c := chamber.New(
-		cfg.FanPin,
-		cfg.HumPin,
-		cfg.SensorPin,
-		nil /*TODO: strategy*/)
+		relay.New(gpio.Open(cfg.FanPin)),
+		relay.New(gpio.Open(cfg.HumPin)),
+		am2301.New(gpio.Open(cfg.SensorPin)),
+		cfg.Strategy.Object)
 
 	err = c.Setup()
 	if err != nil {
