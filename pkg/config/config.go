@@ -4,17 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"time"
+
+	"github.com/xanderflood/fruit-pi/lib/config"
 )
 
 type Config struct {
-	FanPin    int           `json:"fan_pin"`
-	HumPin    int           `json:"hum_pin"`
-	SensorPin int           `json:"sensor_pin"`
-	Interval  time.Duration `json:"interval"`
-
-	// Strategy       string      `json:"strategy"`
-	// StrategyConfig interface{} `json:"strategy_config"`
+	FanPin    int             `json:"fan_pin"`
+	HumPin    int             `json:"hum_pin"`
+	SensorPin int             `json:"sensor_pin"`
+	Interval  config.Duration `json:"interval"`
+	Strategy  StrategyConfig  `json:"strategy"`
 }
 
 func Load(r io.Reader) (Config, error) {
