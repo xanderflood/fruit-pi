@@ -7,6 +7,7 @@ import (
 	"time"
 
 	flags "github.com/jessevdk/go-flags"
+	rpio "github.com/stianeikeland/go-rpio"
 	"github.com/xanderflood/fruit-pi/pkg/chamber"
 	"github.com/xanderflood/fruit-pi/pkg/config"
 )
@@ -29,6 +30,11 @@ func main() {
 		} else {
 			log.Fatal(err)
 		}
+	}
+
+	err = rpio.Open()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	cfg, err := config.Load(f)
