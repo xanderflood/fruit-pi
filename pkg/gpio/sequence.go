@@ -100,10 +100,10 @@ func Monitor(pin Pin, start State, timeout time.Duration) (Sequence, error) {
 	pin.Output()
 
 	//wait for the start state, if we're not there already
-	if _, ok := WaitChange(pin, start, timeout); !ok {
-		return Sequence{}, fmt.Errorf("initial state %s not met", States[start])
-	}
-	// start := pin.Read()
+	// if _, ok := WaitChange(pin, start, timeout); !ok {
+	//   return Sequence{}, fmt.Errorf("initial state %s not met", States[start])
+	// }
+	start = pin.Read()
 
 	durations := []time.Duration{}
 
