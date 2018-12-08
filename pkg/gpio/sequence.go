@@ -69,7 +69,7 @@ func ToSequence(s string) (seq Sequence, err error) {
 func (s Sequence) String() string {
 	dStrs := make([]string, len(s.Durations))
 	for i, d := range s.Durations {
-		dStrs[i] = strconv.FormatInt(int64(d)/1000, 10)
+		dStrs[i] = strconv.FormatInt(int64(d/time.Microsecond), 10)
 	}
 
 	return fmt.Sprintf("%s %s", States[s.Start], strings.Join(dStrs, " "))
