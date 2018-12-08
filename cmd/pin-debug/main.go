@@ -50,12 +50,16 @@ func main() {
 			logger.Error(err)
 			continue
 		}
-		logger.Infof(seq.String())
+		logger.Infof("EXECUTING:", seq.String())
 
 		gpio.Execute(pin, seq)
-		response := gpio.Monitor(pin, Timeout)
+		response, err := gpio.Monitor(pin, seq.NextState(), Timeout)
+		if err != nil {
+			logger.Error(err)
+			continue
+		}
 
-		logger.Infof("RESPONSE:")
+		logger.Infof("GOT RESPONSE:")
 		logger.Infof(response.String())
 	}
 }

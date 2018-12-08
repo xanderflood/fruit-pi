@@ -22,6 +22,19 @@ type Sequence struct {
 	Durations []time.Duration
 }
 
+//EndState final state of a sequence
+func (s Sequence) EndState() State {
+	if len(s.Durations)%2 == 0 {
+		return s.Start
+	}
+	return swapState(s.Start)
+}
+
+//NextState start state for the next sequence
+func (s Sequence) NextState() State {
+	return swapState(s.EndState())
+}
+
 //ToSequence load a sequence from a string of the form:
 //  high 100 1000 30000
 func ToSequence(s string) (seq Sequence, err error) {
@@ -83,10 +96,15 @@ func Execute(pin Pin, seq Sequence) {
 }
 
 //Monitor read a sequence of input states
-func Monitor(pin Pin, timeout time.Duration) Sequence {
+func Monitor(pin Pin, start State, timeout time.Duration) (Sequence, error) {
 	pin.Output()
 
-	start := pin.Read()
+	//wait for the start state, if we're not there already
+	if _, ok := WaitChange(pin, start, timeout); !ok {
+		return Sequence{}, fmt.Errorf("initial state %s not met", States[start])
+	}
+	// start := pin.Read()
+
 	durations := []time.Duration{}
 
 	state := start
@@ -103,5 +121,5 @@ func Monitor(pin Pin, timeout time.Duration) Sequence {
 	return Sequence{
 		Start:     start,
 		Durations: durations,
-	}
+	}, nil
 }
