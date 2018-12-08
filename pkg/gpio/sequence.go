@@ -27,7 +27,7 @@ type Sequence struct {
 func ToSequence(s string) (seq Sequence, err error) {
 	r := strings.NewReader(s)
 	var stateStr string
-	_, err = fmt.Fscanf(r, " %s", &stateStr)
+	_, err = fmt.Fscanf(r, "%s", &stateStr)
 	if err != nil {
 		return
 	}
@@ -39,7 +39,7 @@ func ToSequence(s string) (seq Sequence, err error) {
 
 	for {
 		var micros int
-		_, err = fmt.Fscanf(r, " %d", &micros)
+		_, err = fmt.Fscanf(r, "%d", &micros)
 		if err == io.EOF {
 			err = nil
 			return
@@ -56,7 +56,7 @@ func ToSequence(s string) (seq Sequence, err error) {
 func (s Sequence) String() string {
 	dStrs := make([]string, len(s.Durations))
 	for i, d := range s.Durations {
-		dStrs[i] = strconv.FormatInt(int64(d), 10)
+		dStrs[i] = strconv.FormatInt(int64(d)/1000, 10)
 	}
 
 	return fmt.Sprintf("%s %s", States[s.Start], strings.Join(dStrs, " "))
