@@ -9,13 +9,13 @@ import (
 
 	dbsdk "github.com/xanderflood/database/lib/sdk"
 
-	"github.com/xanderflood/fruit-pi/pkg/am2301"
+	"github.com/xanderflood/fruit-pi/pkg/htg3535ch"
 	"github.com/xanderflood/fruit-pi/pkg/relay"
 )
 
 //Strategy Strategy
 type Strategy interface {
-	Check(am2301.State) State
+	Check(htg3535ch.State) State
 	Configuration() interface{}
 }
 
@@ -28,7 +28,7 @@ type State struct {
 //Chamber a fruiting chamber module
 type Chamber interface {
 	Setup() error
-	Refresh() (State, am2301.State, error)
+	Refresh() (State, htg3535ch.State, error)
 }
 
 //Impl standard chamber implementation
@@ -38,7 +38,7 @@ type Impl struct {
 
 	hum      relay.Relay
 	fan      relay.Relay
-	sensor   am2301.AM2301
+	sensor   htg3535ch.HTG3535CH
 	strategy Strategy
 
 	state State
@@ -47,7 +47,7 @@ type Impl struct {
 //New initialze a new chamber
 func New(
 	hum, fan relay.Relay,
-	sensor am2301.AM2301,
+	sensor htg3535ch.AM2301,
 	strategy Strategy,
 ) *Impl {
 	return &Impl{
@@ -59,10 +59,10 @@ func New(
 }
 
 //Refresh refresh the state error
-func (c *Impl) Refresh() (State, am2301.State, error) {
-	sState, err := c.sensor.Check()
+func (c *Impl) Refresh() (State, htg3535ch.State, error) {
+	sState, err := c.sensor.State()
 	if err != nil {
-		return State{}, am2301.State{}, perrors.Wrapf(err, "[chamber:%s] failed to check sensor state", c.name)
+		return State{}, htg3535ch.State{}, perrors.Wrapf(err, "[chamber:%s] failed to check sensor state", c.name)
 	}
 
 	cState := c.strategy.Check(sState)
