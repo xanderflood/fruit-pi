@@ -2,6 +2,7 @@ package unit
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -46,12 +47,17 @@ type SingleFanUnitState struct {
 	FanLastToggled time.Time `json:"fan_last_toggled"`
 }
 
-func (c SingleFanConfig) Build(client api.API, log tools.Logger) Unit {
+func (c SingleFanConfig) BuildFromJSON(data []byte, client api.API, log tools.Logger) (Unit, error) {
+	err := json.Unmarshal(data, &c)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse unit config: %w", err)
+	}
+
 	return SingleFanUnit{
 		SingleFanConfig: c,
 		client:          client,
 		log:             log,
-	}
+	}, nil
 }
 
 func NewSingleFanUnit(
@@ -77,7 +83,6 @@ func (c SingleFanUnit) InitialState() interface{} {
 }
 
 func (c SingleFanUnit) Refresh(stateI interface{}) error {
-	//TODO will this make a copy
 	state := (stateI).(*SingleFanUnitState)
 
 	sState, err := c.htg.Read()
@@ -87,17 +92,21 @@ func (c SingleFanUnit) Refresh(stateI interface{}) error {
 
 	hum, _ := sState.Humidity.Float64()
 	if state.Humidifier {
-		state.Humidifier = hum > c.HumOn
+		state.Humidifier = hum < c.HumOff
 	} else {
-		state.Humidifier = hum > c.HumOff
+		state.Humidifier = hum < c.HumOn
 	}
 
 	if state.Fan {
-		state.Fan = time.Since(state.FanLastToggled) < c.FanOn.Duration
-		state.FanLastToggled = time.Now()
+		if time.Since(state.FanLastToggled) > c.FanOn.Duration {
+			state.Fan = false
+			state.FanLastToggled = time.Now()
+		}
 	} else {
-		state.Fan = time.Since(state.FanLastToggled) > c.FanOff.Duration
-		state.FanLastToggled = time.Now()
+		if time.Since(state.FanLastToggled) > c.FanOff.Duration {
+			state.Fan = true
+			state.FanLastToggled = time.Now()
+		}
 	}
 
 	t, _ := sState.Temperature.Float64()

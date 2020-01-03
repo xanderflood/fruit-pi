@@ -16,8 +16,9 @@ import (
 )
 
 var opts struct {
-	Host  string
-	Token string
+	Host                   string `long:"fruit-pi-host" env:"FRUIT_PI_HOST" required:"true"`
+	Token                  string `long:"fruit-pi-token" env:"FRUIT_PI_TOKEN" required:"true"`
+	SkipGPIOInitialization bool   `long:"skip-gpio-initialization" env:"SKIP_GPIO_INITIALIZATION" optional:"true"`
 }
 
 func main() {
@@ -27,9 +28,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = rpio.Open()
-	if err != nil {
-		log.Fatal(err)
+	if !opts.SkipGPIOInitialization {
+		err = rpio.Open()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	logger := tools.NewStdoutLogger(tools.LogLevelDebug, "fruit-pi")

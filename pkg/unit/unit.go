@@ -9,7 +9,7 @@ import (
 
 //UnitBuilder is used to encode a Unit in JSON
 type UnitBuilder interface {
-	Build(client api.API, logger tools.Logger) Unit
+	BuildFromJSON(data []byte, client api.API, logger tools.Logger) (Unit, error)
 }
 
 //Unit represents some sensors and things
@@ -20,6 +20,7 @@ type Unit interface {
 
 var Units = map[string]UnitBuilder{
 	"single_fan": SingleFanConfig{},
+	"dummy":      DummyConfig{},
 }
 
 func GetBlankUnitBuilder(kind string) *UnitBuilder {

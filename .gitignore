@@ -11,4 +11,4 @@ config/*
 !.docdata/.gitkeep
 
 cmd/api/api
-
+.env
