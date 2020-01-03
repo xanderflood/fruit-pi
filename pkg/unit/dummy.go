@@ -9,7 +9,6 @@ import (
 	"github.com/xanderflood/fruit-pi-server/lib/api"
 	"github.com/xanderflood/fruit-pi/lib/config"
 	"github.com/xanderflood/fruit-pi/lib/tools"
-	"github.com/xanderflood/fruit-pi/pkg/htg3535ch"
 )
 
 //DummyConfig is a standard unit config
@@ -19,8 +18,8 @@ type DummyConfig struct {
 	FanOn  config.Duration `json:"fan_on"`
 	FanOff config.Duration `json:"fan_off"`
 
-	FakeTemp json.Number `json:"fake_temp"`
-	FakeHum  json.Number `json:"fake_hum"`
+	FakeTemp float64 `json:"fake_temp"`
+	FakeHum  float64 `json:"fake_hum"`
 }
 
 //DummyUnit is a standard unit implementation
@@ -72,12 +71,7 @@ func (c DummyUnit) InitialState() interface{} {
 func (c DummyUnit) Refresh(stateI interface{}) error {
 	state := (stateI).(*DummyUnitState)
 
-	sState := htg3535ch.State{
-		Humidity:    c.FakeHum,
-		Temperature: c.FakeTemp,
-	}
-
-	hum, _ := sState.Humidity.Float64()
+	hum := c.FakeHum
 	if state.Humidifier {
 		state.Humidifier = hum < c.HumOff
 	} else {
@@ -96,9 +90,8 @@ func (c DummyUnit) Refresh(stateI interface{}) error {
 		}
 	}
 
-	t, _ := sState.Temperature.Float64()
-	rh, _ := sState.Humidity.Float64()
-	_, err := c.client.InsertReading(context.Background(), t, rh)
+	tK := c.FakeTemp
+	_, err := c.client.InsertReading(context.Background(), tK, hum)
 	if err != nil {
 		return fmt.Errorf("record sensor state: %w", err)
 	}

@@ -1,8 +1,5 @@
-build/*
-!build/configure/.gitkeep
-!build/controller/.gitkeep
-!build/setup/.gitkeep
-!build/pin-debug/.gitkeep
+build/controller/controller
+build/pin-debug/pin-debug
 
 config/*
 !config/.gitkeep

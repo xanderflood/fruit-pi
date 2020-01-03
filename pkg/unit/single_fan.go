@@ -19,8 +19,8 @@ type SingleFanConfig struct {
 	HumidifierRelay int `json:"humidifier_relay"`
 	FanRelay        int `json:"fan_rly"`
 
-	// TemperatureCelciusADC int `json:"temp_adc"`
-	// RelativeHumidityADC   int `json:"rh_adc"`
+	TemperatureCelciusADC int `json:"temp_adc"`
+	RelativeHumidityADC   int `json:"rh_adc"`
 
 	HumOn  float64         `json:"hum_on"`
 	HumOff float64         `json:"hum_off"`
@@ -32,9 +32,10 @@ type SingleFanConfig struct {
 type SingleFanUnit struct {
 	SingleFanConfig
 
-	htg htg3535ch.HTG3535CH
-	fan relay.Relay
-	hum relay.Relay
+	temp     htg3535ch.TemperatureK
+	humidity htg3535ch.Humidity
+	fan      relay.Relay
+	hum      relay.Relay
 
 	client api.API
 	log    tools.Logger
@@ -71,7 +72,8 @@ func NewSingleFanUnit(
 		log:             log,
 	}
 
-	unit.htg = htg3535ch.HTG3535CH{}
+	unit.temp = htg3535ch.NewTemperatureK(c.TemperatureCelciusADC)
+	unit.humidity = htg3535ch.NewHumidity(c.RelativeHumidityADC)
 	unit.fan = relay.New(gpio.New(c.FanRelay))
 	unit.hum = relay.New(gpio.New(c.HumidifierRelay))
 
@@ -85,12 +87,15 @@ func (c SingleFanUnit) InitialState() interface{} {
 func (c SingleFanUnit) Refresh(stateI interface{}) error {
 	state := (stateI).(*SingleFanUnitState)
 
-	sState, err := c.htg.Read()
+	tempK, err := c.temp.Read()
 	if err != nil {
-		return fmt.Errorf("failed to check htg sensor state: %w", err)
+		return fmt.Errorf("failed to check htg temperature sensor state: %w", err)
+	}
+	hum, err := c.humidity.Read()
+	if err != nil {
+		return fmt.Errorf("failed to check htg temperature sensor state: %w", err)
 	}
 
-	hum, _ := sState.Humidity.Float64()
 	if state.Humidifier {
 		state.Humidifier = hum < c.HumOff
 	} else {
@@ -109,9 +114,7 @@ func (c SingleFanUnit) Refresh(stateI interface{}) error {
 		}
 	}
 
-	t, _ := sState.Temperature.Float64()
-	rh, _ := sState.Humidity.Float64()
-	_, err = c.client.InsertReading(context.Background(), t, rh)
+	_, err = c.client.InsertReading(context.Background(), tempK, hum)
 	if err != nil {
 		return fmt.Errorf("record sensor state: %w", err)
 	}
