@@ -1,7 +1,6 @@
 package unit
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -72,7 +71,7 @@ func NewSingleFanUnit(
 		log:             log,
 	}
 
-	unit.temp = htg3535ch.NewTemperatureK(c.TemperatureCelciusADC)
+	unit.temp = htg3535ch.NewDefaultTemperatureK(c.TemperatureCelciusADC)
 	unit.humidity = htg3535ch.NewHumidity(c.RelativeHumidityADC)
 	unit.fan = relay.New(gpio.New(c.FanRelay))
 	unit.hum = relay.New(gpio.New(c.HumidifierRelay))
@@ -114,10 +113,12 @@ func (c SingleFanUnit) Refresh(stateI interface{}) error {
 		}
 	}
 
-	_, err = c.client.InsertReading(context.Background(), tempK, hum)
-	if err != nil {
-		return fmt.Errorf("record sensor state: %w", err)
-	}
+	c.log.Info("Humidity    (%): %v", hum)
+	c.log.Info("Temperature (C): %v", tempK-273.15)
+	// _, err = c.client.InsertReading(context.Background(), tempK, hum)
+	// if err != nil {
+	// 	return fmt.Errorf("record sensor state: %w", err)
+	// }
 
 	if state.Humidifier {
 		c.hum.On()

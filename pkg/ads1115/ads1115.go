@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"math"
 	"os/exec"
+	"strconv"
 )
 
+//ADS1115 represents an ADS1115 over I2C. The current implementation assumes
+//that the device uses its default I2C address, 0x48.
 type ADS1115 struct {
 	pin int
 }
@@ -19,7 +22,7 @@ func New(pin int) ADS1115 {
 }
 
 func (a ADS1115) ReadVoltage() (float64, error) {
-	cmd := exec.Command("./htg3535ch")
+	cmd := exec.Command("./ads1115", strconv.FormatInt(int64(a.pin), 10))
 
 	// Combine stdout and stderr
 	output, err := cmd.Output()

@@ -13,19 +13,24 @@ type TemperatureK struct {
 	VCCVolts            float64
 }
 
+//NewDefaultTemperatureK creates a new TemperatureK with default wiring configuration
+func NewDefaultTemperatureK(pin int) TemperatureK {
+	return NewTemperatureK(pin, 10.0, 5.0)
+}
+
 //NewTemperatureK creates a new TemperatureK with default wiring configuration
-func NewTemperatureK(pin int) TemperatureK {
+func NewTemperatureK(pin int, batchResistanceOhms, vccVolts float64) TemperatureK {
 	return TemperatureK{
 		ADS1115:             ads1115.New(pin),
-		BatchResistanceOhms: 10,
-		VCCVolts:            5,
+		BatchResistanceOhms: batchResistanceOhms,
+		VCCVolts:            vccVolts,
 	}
 }
 
 //Read takes a reading from the underlying ADS1115 and converts the voltage
 //value to a temperature reading in Kelvins.
 func (s TemperatureK) Read() (float64, error) {
-	v, err := s.ReadVoltage()
+	v, err := s.ADS1115.ReadVoltage()
 	if err != nil {
 		return 0, err
 	}
@@ -37,17 +42,21 @@ func (s TemperatureK) Read() (float64, error) {
 }
 
 //Humidity represents the HTG pin for measure relative humidity in percent
-type Humidity ads1115.ADS1115
+type Humidity struct {
+	ads1115.ADS1115
+}
 
 //NewHumidity creates a new Humidity
 func NewHumidity(pin int) Humidity {
-	return Humidity(ads1115.New(pin))
+	return Humidity{
+		ADS1115: ads1115.New(pin),
+	}
 }
 
 //Read takes a reading from the underlying ADS1115 and converts the voltage
 //value to a relative humidity reading in percent.
 func (s Humidity) Read() (float64, error) {
-	v, err := ads1115.ADS1115(s).ReadVoltage()
+	v, err := s.ADS1115.ReadVoltage()
 	if err != nil {
 		return 0, err
 	}
