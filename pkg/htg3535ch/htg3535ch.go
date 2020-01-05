@@ -15,7 +15,7 @@ type TemperatureK struct {
 
 //NewDefaultTemperatureK creates a new TemperatureK with default wiring configuration
 func NewDefaultTemperatureK(pin int) TemperatureK {
-	return NewTemperatureK(pin, 10.0, 5.0)
+	return NewTemperatureK(pin, 10000.0, 5.0)
 }
 
 //NewTemperatureK creates a new TemperatureK with default wiring configuration
