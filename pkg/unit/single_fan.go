@@ -53,11 +53,7 @@ func (c SingleFanConfig) BuildFromJSON(data []byte, client api.API, log tools.Lo
 		return nil, fmt.Errorf("failed to parse unit config: %w", err)
 	}
 
-	return SingleFanUnit{
-		SingleFanConfig: c,
-		client:          client,
-		log:             log,
-	}, nil
+	return NewSingleFanUnit(c, client, log), nil
 }
 
 func NewSingleFanUnit(
@@ -84,6 +80,9 @@ func (c SingleFanUnit) InitialState() interface{} {
 }
 
 func (c SingleFanUnit) Refresh(stateI interface{}) error {
+	//TODO changing the type of a unit in flight causes this line to panic, killing the
+	// controller process and causing all the state objects to be lost.
+	// FIX IT SOMEHOW!
 	state := (stateI).(*SingleFanUnitState)
 
 	tempK, err := c.temp.Read()
