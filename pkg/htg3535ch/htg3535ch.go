@@ -1,6 +1,7 @@
 package htg3535ch
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/xanderflood/fruit-pi/pkg/ads1115"
@@ -36,6 +37,8 @@ func (s TemperatureK) Read() (float64, error) {
 	}
 
 	ntcResistanceOhms := s.BatchResistanceOhms * v / (s.VCCVolts - v)
+	fmt.Println("v_out: ", v)
+	fmt.Println("resis: ", ntcResistanceOhms)
 	logR := math.Log(ntcResistanceOhms)
 	temp := 1 / (8.61393e-04 + 2.56377e-04*logR + 1.68055e-07*logR*logR*logR)
 	return temp, nil
