@@ -41,10 +41,10 @@ func main() {
 	for {
 		logger.Infof("true")
 		pin.Set(true)
-		time.Sleep(1000000)
+		time.Sleep(time.Second)
 
 		logger.Infof("false")
 		pin.Set(false)
-		time.Sleep(1000000)
+		time.Sleep(time.Second)
 	}
 }
