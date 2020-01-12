@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	flags "github.com/jessevdk/go-flags"
@@ -39,27 +37,14 @@ func main() {
 	pin := gpio.New(opts.Pin)
 
 	logger := tools.NewStdoutLogger(tools.LogLevelDebug, "send")
-	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
-		fmt.Printf("> ")
-		scanner.Scan()
+		logger.Infof("true")
+		pin.Set(true)
+		time.Sleep(1000)
 
-		seq, err := gpio.ToSequence(scanner.Text())
-		if err != nil {
-			logger.Error(err)
-			continue
-		}
-		logger.Infof("EXECUTING:", seq.String())
-
-		gpio.Execute(pin, seq)
-		response, err := gpio.Monitor(pin, seq.NextState(), Timeout)
-		if err != nil {
-			logger.Error(err)
-			continue
-		}
-
-		logger.Infof("GOT RESPONSE:")
-		logger.Infof(response.String())
+		logger.Infof("false")
+		pin.Set(false)
+		time.Sleep(1000)
 	}
 }
