@@ -43,11 +43,7 @@ func (c DummyConfig) BuildFromJSON(data []byte, client api.API, log tools.Logger
 		return nil, fmt.Errorf("failed to parse unit config: %w", err)
 	}
 
-	return DummyUnit{
-		DummyConfig: c,
-		client:      client,
-		log:         log,
-	}, nil
+	return NewDummyUnit(c, client, log), nil
 }
 
 func NewDummyUnit(

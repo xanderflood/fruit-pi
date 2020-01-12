@@ -73,5 +73,8 @@ func (c RelayDummyUnit) Refresh(_ interface{}) error {
 		c.fan.Off()
 	}
 
+	c.log.Info("hum:", c.HumidifierState)
+	c.log.Info("fan:", c.FanState)
+
 	return nil
 }
