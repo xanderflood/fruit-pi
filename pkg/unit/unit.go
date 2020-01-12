@@ -1,6 +1,7 @@
 package unit
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/xanderflood/fruit-pi-server/lib/api"
@@ -24,7 +25,10 @@ var Units = map[string]UnitBuilder{
 	"relay_dummy": RelayDummyConfig{},
 }
 
-func GetBlankUnitBuilder(kind string) *UnitBuilder {
-	builder := Units[strings.ToLower(kind)]
-	return &builder
+func GetBlankUnitBuilder(kind string) (*UnitBuilder, error) {
+	builder, ok := Units[strings.ToLower(kind)]
+	if !ok {
+		return nil, fmt.Errorf("unsupported unit type identifier `%s`", kind)
+	}
+	return &builder, nil
 }

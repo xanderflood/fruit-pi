@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/stianeikeland/go-rpio"
 	"github.com/xanderflood/fruit-pi-server/lib/api"
 	"github.com/xanderflood/fruit-pi/lib/tools"
-	"github.com/xanderflood/fruit-pi/pkg/gpio"
 	"github.com/xanderflood/fruit-pi/pkg/relay"
 )
 
@@ -50,8 +50,8 @@ func NewRelayDummyUnit(
 		log:              log,
 	}
 
-	unit.fan = relay.New(gpio.New(c.FanRelay))
-	unit.hum = relay.New(gpio.New(c.HumidifierRelay))
+	unit.fan = relay.New(rpio.Pin(c.FanRelay))
+	unit.hum = relay.New(rpio.Pin(c.HumidifierRelay))
 
 	return unit
 }
@@ -61,17 +61,8 @@ func (c RelayDummyUnit) InitialState() interface{} {
 }
 
 func (c RelayDummyUnit) Refresh(_ interface{}) error {
-	if c.HumidifierState {
-		c.hum.On()
-	} else {
-		c.hum.Off()
-	}
-
-	if c.FanState {
-		c.fan.On()
-	} else {
-		c.fan.Off()
-	}
+	c.hum.Set(c.HumidifierState)
+	c.fan.Set(c.FanState)
 
 	c.log.Info("hum:", c.HumidifierState)
 	c.log.Info("fan:", c.FanState)

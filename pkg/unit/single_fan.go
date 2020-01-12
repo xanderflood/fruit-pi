@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/stianeikeland/go-rpio"
 	"github.com/xanderflood/fruit-pi-server/lib/api"
 	"github.com/xanderflood/fruit-pi/lib/config"
 	"github.com/xanderflood/fruit-pi/lib/tools"
-	"github.com/xanderflood/fruit-pi/pkg/gpio"
 	"github.com/xanderflood/fruit-pi/pkg/htg3535ch"
 	"github.com/xanderflood/fruit-pi/pkg/relay"
 )
@@ -69,8 +69,8 @@ func NewSingleFanUnit(
 
 	unit.temp = htg3535ch.NewDefaultTemperatureK(c.TemperatureCelciusADC)
 	unit.humidity = htg3535ch.NewHumidity(c.RelativeHumidityADC)
-	unit.fan = relay.New(gpio.New(c.FanRelay))
-	unit.hum = relay.New(gpio.New(c.HumidifierRelay))
+	unit.fan = relay.New(rpio.Pin(c.FanRelay))
+	unit.hum = relay.New(rpio.Pin(c.HumidifierRelay))
 
 	return unit
 }
@@ -119,17 +119,8 @@ func (c SingleFanUnit) Refresh(stateI interface{}) error {
 	// 	return fmt.Errorf("record sensor state: %w", err)
 	// }
 
-	if state.Humidifier {
-		c.hum.On()
-	} else {
-		c.hum.Off()
-	}
-
-	if state.Fan {
-		c.fan.On()
-	} else {
-		c.fan.Off()
-	}
+	c.hum.Set(state.Humidifier)
+	c.fan.Set(state.Fan)
 
 	c.log.Info("hum:", state.Humidifier)
 	c.log.Info("fan:", state.Fan)

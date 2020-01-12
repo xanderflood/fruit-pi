@@ -39,30 +39,31 @@ func Setup() error {
 	return rpio.Open()
 }
 
+//OutputPin minimal interface for a GPIO pin
+//go:generate counterfeiter . OutputPin
+type OutputPin interface {
+	Output()
+	High()
+	Low()
+}
+
+//InputPin minimal interface for a GPIO pin
+//go:generate counterfeiter . InputPin
+type InputPin interface {
+	Input()
+	Read() rpio.State
+}
+
 //Pin minimal interface for a GPIO pin
 //go:generate counterfeiter . Pin
 type Pin interface {
-	Set(bool)
-
-	// High()
-	// Low()
-
-	// Input()
-	// Output()
-	// Read() rpio.State
+	OutputPin
+	InputPin
 }
 
-//PinAgent wrapper around rpio.Pin
-type PinAgent struct {
-	rpio.Pin
-}
-
-//New open a handler for a specific GPIO pin
-func New(pin int) Pin {
-	return PinAgent{Pin: rpio.Pin(pin)}
-}
-
-func (pin PinAgent) Set(high bool) {
+//Set sets the state of the pin
+func Set(pin OutputPin, high bool) {
+	pin.Output()
 	if high {
 		pin.High()
 	} else {

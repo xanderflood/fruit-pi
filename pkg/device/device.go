@@ -73,7 +73,10 @@ func (d *Device) refreshUnits(ctx context.Context) error {
 
 	d.units = map[string]unit.Unit{}
 	for name, cfg := range rawConfig {
-		builder := unit.GetBlankUnitBuilder(cfg.Type)
+		builder, err := unit.GetBlankUnitBuilder(cfg.Type)
+		if err != nil {
+			return err
+		}
 
 		d.units[name], err = (*builder).BuildFromJSON([]byte(cfg.Config), d.client, d.log)
 		if err != nil {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	flags "github.com/jessevdk/go-flags"
+	"github.com/stianeikeland/go-rpio"
 	"github.com/xanderflood/fruit-pi/lib/tools"
 	"github.com/xanderflood/fruit-pi/pkg/gpio"
 )
@@ -34,17 +35,17 @@ func main() {
 	if err := gpio.Setup(); err != nil {
 		log.Fatal(err)
 	}
-	pin := gpio.New(opts.Pin)
+	pin := rpio.Pin(opts.Pin)
 
 	logger := tools.NewStdoutLogger(tools.LogLevelDebug, "send")
 
 	for {
 		logger.Infof("true")
-		pin.Set(true)
+		gpio.Set(pin, true)
 		time.Sleep(time.Second)
 
 		logger.Infof("false")
-		pin.Set(false)
+		gpio.Set(pin, false)
 		time.Sleep(time.Second)
 	}
 }
