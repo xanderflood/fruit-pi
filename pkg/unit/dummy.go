@@ -103,6 +103,9 @@ func (c DummyUnit) Refresh(stateI interface{}) error {
 		return fmt.Errorf("record sensor state: %w", err)
 	}
 
+	c.hum.Set(state.Humidifier)
+	c.fan.Set(state.Fan)
+
 	c.log.Info("hum:", state.Humidifier)
 	c.log.Info("fan:", state.Fan)
 
