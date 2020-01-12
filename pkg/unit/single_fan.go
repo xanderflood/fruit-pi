@@ -131,5 +131,8 @@ func (c SingleFanUnit) Refresh(stateI interface{}) error {
 		c.fan.Off()
 	}
 
+	c.log.Info("hum:", state.Humidifier)
+	c.log.Info("fan:", state.Fan)
+
 	return nil
 }
