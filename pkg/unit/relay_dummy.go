@@ -36,11 +36,7 @@ func (c RelayDummyConfig) BuildFromJSON(data []byte, client api.API, log tools.L
 		return nil, fmt.Errorf("failed to parse unit config: %w", err)
 	}
 
-	return RelayDummyUnit{
-		RelayDummyConfig: c,
-		client:           client,
-		log:              log,
-	}, nil
+	return NewRelayDummyUnit(c, client, log), nil
 }
 
 func NewRelayDummyUnit(
