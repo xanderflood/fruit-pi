@@ -7,6 +7,8 @@ import (
 	"github.com/xanderflood/fruit-pi/pkg/ads1115"
 )
 
+// based on https://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc&DocId=Data+Sheet%7FHPC123_K%7FA1%7Fpdf%7FEnglish%7FENG_DS_HPC123_K_A1.pdf%7FCAT-HSMM0001
+
 //TemperatureK represents the HTG pin for measure temperature in Kelvins
 type TemperatureK struct {
 	ads1115.ADS1115

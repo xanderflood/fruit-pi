@@ -25,9 +25,9 @@ func (a ADS1115) ReadVoltage() (float64, error) {
 	cmd := exec.Command("./ads1115", strconv.FormatInt(int64(a.pin), 10))
 
 	// Combine stdout and stderr
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return 0, fmt.Errorf("failed executing ADS1115 read: %w", err)
+		return 0, fmt.Errorf("failed executing ADS1115 read with message `%s`: %w", string(output), err)
 	}
 
 	bs, err := base64.StdEncoding.DecodeString(string(output))
