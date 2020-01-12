@@ -19,8 +19,9 @@ type Unit interface {
 }
 
 var Units = map[string]UnitBuilder{
-	"single_fan": SingleFanConfig{},
-	"dummy":      DummyConfig{},
+	"single_fan":  SingleFanConfig{},
+	"dummy":       DummyConfig{},
+	"relay_dummy": RelayDummyConfig{},
 }
 
 func GetBlankUnitBuilder(kind string) *UnitBuilder {
