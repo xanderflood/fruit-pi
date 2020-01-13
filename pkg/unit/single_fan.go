@@ -1,6 +1,7 @@
 package unit
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -20,6 +21,7 @@ type SingleFanConfig struct {
 
 	TemperatureCelciusADC int `json:"temp_adc"`
 	RelativeHumidityADC   int `json:"rh_adc"`
+	// VoltageCalibrationADC int `json:"vcc_adc"`
 
 	HumOn  float64         `json:"hum_on"`
 	HumOff float64         `json:"hum_off"`
@@ -71,8 +73,8 @@ func NewSingleFanUnit(
 
 	unit.temp = htg3535ch.NewDefaultTemperatureK(c.TemperatureCelciusADC)
 	unit.humidity = htg3535ch.NewHumidity(c.RelativeHumidityADC)
-	unit.fan = relay.New(rpio.Pin(c.FanRelay))
-	unit.hum = relay.New(rpio.Pin(c.HumidifierRelay))
+	unit.fan = relay.New(rpio.Pin(c.FanRelay), true)
+	unit.hum = relay.New(rpio.Pin(c.HumidifierRelay), true)
 
 	return unit
 }
@@ -111,10 +113,10 @@ func (c SingleFanUnit) Refresh() error {
 
 	c.log.Info("Humidity    (%): %v", hum)
 	c.log.Info("Temperature (C): %v", tempK-273.15)
-	// _, err = c.client.InsertReading(context.Background(), tempK, hum)
-	// if err != nil {
-	// 	return fmt.Errorf("record sensor state: %w", err)
-	// }
+	_, err = c.client.InsertReading(context.Background(), tempK, hum)
+	if err != nil {
+		return fmt.Errorf("record sensor state: %w", err)
+	}
 
 	c.hum.Set(c.state.Humidifier)
 	c.fan.Set(c.state.Fan)

@@ -68,8 +68,8 @@ func NewDummyUnit(
 		log:         log,
 	}
 
-	unit.fan = relay.New(rpio.Pin(c.FanRelay))
-	unit.hum = relay.New(rpio.Pin(c.HumidifierRelay))
+	unit.fan = relay.New(rpio.Pin(c.FanRelay), true)
+	unit.hum = relay.New(rpio.Pin(c.HumidifierRelay), true)
 
 	return unit
 }

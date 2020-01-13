@@ -1,7 +1,6 @@
 package htg3535ch
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/xanderflood/fruit-pi/pkg/ads1115"
@@ -11,20 +10,25 @@ import (
 
 //TemperatureK represents the HTG pin for measure temperature in Kelvins
 type TemperatureK struct {
-	ads1115.ADS1115
+	TempADS             ads1115.ADS1115
 	BatchResistanceOhms float64
-	VCCVolts            float64
+	VCCVolts            func() (float64, error)
 }
 
 //NewDefaultTemperatureK creates a new TemperatureK with default wiring configuration
-func NewDefaultTemperatureK(pin int) TemperatureK {
-	return NewTemperatureK(pin, 10000.0, 5.0)
+func NewDefaultTemperatureK(tPin int) TemperatureK {
+	return NewTemperatureK(tPin, 10000.0, func() (float64, error) { return 5.0, nil })
+}
+
+//NewCalibrationTemperatureK creates a new TemperatureK with default wiring configuration
+func NewCalibrationTemperatureK(tPin, vccPin int) TemperatureK {
+	return NewTemperatureK(tPin, 10000.0, ads1115.New(vccPin).ReadVoltage)
 }
 
 //NewTemperatureK creates a new TemperatureK with default wiring configuration
-func NewTemperatureK(pin int, batchResistanceOhms, vccVolts float64) TemperatureK {
+func NewTemperatureK(tPin int, batchResistanceOhms float64, vccVolts func() (float64, error)) TemperatureK {
 	return TemperatureK{
-		ADS1115:             ads1115.New(pin),
+		TempADS:             ads1115.New(tPin),
 		BatchResistanceOhms: batchResistanceOhms,
 		VCCVolts:            vccVolts,
 	}
@@ -33,14 +37,17 @@ func NewTemperatureK(pin int, batchResistanceOhms, vccVolts float64) Temperature
 //Read takes a reading from the underlying ADS1115 and converts the voltage
 //value to a temperature reading in Kelvins.
 func (s TemperatureK) Read() (float64, error) {
-	v, err := s.ADS1115.ReadVoltage()
+	v, err := s.TempADS.ReadVoltage()
 	if err != nil {
 		return 0, err
 	}
 
-	ntcResistanceOhms := s.BatchResistanceOhms * v / (s.VCCVolts - v)
-	fmt.Println("v_out: ", v)
-	fmt.Println("resis: ", ntcResistanceOhms)
+	vcc, err := s.VCCVolts()
+	if err != nil {
+		return 0, err
+	}
+
+	ntcResistanceOhms := s.BatchResistanceOhms * v / (vcc - v)
 	logR := math.Log(ntcResistanceOhms)
 	temp := 1 / (8.61393e-04 + 2.56377e-04*logR + 1.68055e-07*logR*logR*logR)
 	return temp, nil
