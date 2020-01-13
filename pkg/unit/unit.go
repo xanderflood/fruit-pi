@@ -15,8 +15,8 @@ type UnitBuilder interface {
 
 //Unit represents some sensors and things
 type Unit interface {
-	Refresh(state interface{}) error
-	InitialState() interface{}
+	Refresh() error
+	SetState(interface{})
 }
 
 var Units = map[string]UnitBuilder{

@@ -56,11 +56,9 @@ func NewRelayDummyUnit(
 	return unit
 }
 
-func (c RelayDummyUnit) InitialState() interface{} {
-	return &struct{}{}
-}
+func (c RelayDummyUnit) SetState(state interface{}) {}
 
-func (c RelayDummyUnit) Refresh(_ interface{}) error {
+func (c RelayDummyUnit) Refresh() error {
 	c.hum.Set(c.HumidifierState)
 	c.fan.Set(c.FanState)
 

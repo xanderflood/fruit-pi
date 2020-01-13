@@ -46,7 +46,24 @@ func (d *Device) Refresh(ctx context.Context) {
 		d.log.Debugf("refreshing unit %s", name)
 		state := d.state[name]
 
-		err := unit.Refresh(state)
+		//if this unit has stored state, use it.
+		//this step is typically redundant.
+		var err error
+		if state != nil {
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						err = fmt.Errorf("failed setting stored state: %v", r)
+					}
+				}()
+				unit.SetState(state)
+			}()
+			if err != nil {
+				d.log.Error(err)
+			}
+		}
+
+		err = unit.Refresh()
 		if err != nil {
 			d.log.Error(err)
 		}
@@ -81,9 +98,6 @@ func (d *Device) refreshUnits(ctx context.Context) error {
 		d.units[name], err = (*builder).BuildFromJSON([]byte(cfg.Config), d.client, d.log)
 		if err != nil {
 			return err
-		}
-		if _, ok := d.state[name]; !ok {
-			d.state[name] = d.units[name].InitialState()
 		}
 	}
 

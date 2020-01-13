@@ -31,6 +31,8 @@ type DummyConfig struct {
 type DummyUnit struct {
 	DummyConfig
 
+	state *DummyUnitState
+
 	fan relay.Relay
 	hum relay.Relay
 
@@ -61,6 +63,7 @@ func NewDummyUnit(
 ) DummyUnit {
 	unit := DummyUnit{
 		DummyConfig: c,
+		state:       &DummyUnitState{},
 		client:      client,
 		log:         log,
 	}
@@ -71,29 +74,27 @@ func NewDummyUnit(
 	return unit
 }
 
-func (c DummyUnit) InitialState() interface{} {
-	return &DummyUnitState{}
+func (c DummyUnit) SetState(state interface{}) {
+	c.state = state.(*DummyUnitState)
 }
 
-func (c DummyUnit) Refresh(stateI interface{}) error {
-	state := (stateI).(*DummyUnitState)
-
+func (c DummyUnit) Refresh() error {
 	hum := c.FakeHum
-	if state.Humidifier {
-		state.Humidifier = hum < c.HumOff
+	if c.state.Humidifier {
+		c.state.Humidifier = hum < c.HumOff
 	} else {
-		state.Humidifier = hum < c.HumOn
+		c.state.Humidifier = hum < c.HumOn
 	}
 
-	if state.Fan {
-		if time.Since(state.FanLastToggled) > c.FanOn.Duration {
-			state.Fan = false
-			state.FanLastToggled = time.Now()
+	if c.state.Fan {
+		if time.Since(c.state.FanLastToggled) > c.FanOn.Duration {
+			c.state.Fan = false
+			c.state.FanLastToggled = time.Now()
 		}
 	} else {
-		if time.Since(state.FanLastToggled) > c.FanOff.Duration {
-			state.Fan = true
-			state.FanLastToggled = time.Now()
+		if time.Since(c.state.FanLastToggled) > c.FanOff.Duration {
+			c.state.Fan = true
+			c.state.FanLastToggled = time.Now()
 		}
 	}
 
@@ -103,11 +104,11 @@ func (c DummyUnit) Refresh(stateI interface{}) error {
 		return fmt.Errorf("record sensor state: %w", err)
 	}
 
-	c.hum.Set(state.Humidifier)
-	c.fan.Set(state.Fan)
+	c.hum.Set(c.state.Humidifier)
+	c.fan.Set(c.state.Fan)
 
-	c.log.Info("hum:", state.Humidifier)
-	c.log.Info("fan:", state.Fan)
+	c.log.Info("hum:", c.state.Humidifier)
+	c.log.Info("fan:", c.state.Fan)
 
 	return nil
 }

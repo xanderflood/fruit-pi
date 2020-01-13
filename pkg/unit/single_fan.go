@@ -30,6 +30,7 @@ type SingleFanConfig struct {
 //SingleFanUnit is a standard unit implementation
 type SingleFanUnit struct {
 	SingleFanConfig
+	state *SingleFanUnitState
 
 	temp     htg3535ch.TemperatureK
 	humidity htg3535ch.Humidity
@@ -63,6 +64,7 @@ func NewSingleFanUnit(
 ) SingleFanUnit {
 	unit := SingleFanUnit{
 		SingleFanConfig: c,
+		state:           &SingleFanUnitState{},
 		client:          client,
 		log:             log,
 	}
@@ -75,16 +77,11 @@ func NewSingleFanUnit(
 	return unit
 }
 
-func (c SingleFanUnit) InitialState() interface{} {
-	return &SingleFanUnitState{}
+func (c SingleFanUnit) SetState(state interface{}) {
+	c.state = state.(*SingleFanUnitState)
 }
 
-func (c SingleFanUnit) Refresh(stateI interface{}) error {
-	//TODO changing the type of a unit in flight causes this line to panic, killing the
-	// controller process and causing all the state objects to be lost.
-	// FIX IT SOMEHOW!
-	state := (stateI).(*SingleFanUnitState)
-
+func (c SingleFanUnit) Refresh() error {
 	tempK, err := c.temp.Read()
 	if err != nil {
 		return fmt.Errorf("failed to check htg temperature sensor state: %w", err)
@@ -94,21 +91,21 @@ func (c SingleFanUnit) Refresh(stateI interface{}) error {
 		return fmt.Errorf("failed to check htg temperature sensor state: %w", err)
 	}
 
-	if state.Humidifier {
-		state.Humidifier = hum < c.HumOff
+	if c.state.Humidifier {
+		c.state.Humidifier = hum < c.HumOff
 	} else {
-		state.Humidifier = hum < c.HumOn
+		c.state.Humidifier = hum < c.HumOn
 	}
 
-	if state.Fan {
-		if time.Since(state.FanLastToggled) > c.FanOn.Duration {
-			state.Fan = false
-			state.FanLastToggled = time.Now()
+	if c.state.Fan {
+		if time.Since(c.state.FanLastToggled) > c.FanOn.Duration {
+			c.state.Fan = false
+			c.state.FanLastToggled = time.Now()
 		}
 	} else {
-		if time.Since(state.FanLastToggled) > c.FanOff.Duration {
-			state.Fan = true
-			state.FanLastToggled = time.Now()
+		if time.Since(c.state.FanLastToggled) > c.FanOff.Duration {
+			c.state.Fan = true
+			c.state.FanLastToggled = time.Now()
 		}
 	}
 
@@ -119,11 +116,11 @@ func (c SingleFanUnit) Refresh(stateI interface{}) error {
 	// 	return fmt.Errorf("record sensor state: %w", err)
 	// }
 
-	c.hum.Set(state.Humidifier)
-	c.fan.Set(state.Fan)
+	c.hum.Set(c.state.Humidifier)
+	c.fan.Set(c.state.Fan)
 
-	c.log.Info("hum:", state.Humidifier)
-	c.log.Info("fan:", state.Fan)
+	c.log.Info("hum:", c.state.Humidifier)
+	c.log.Info("fan:", c.state.Fan)
 
 	return nil
 }
