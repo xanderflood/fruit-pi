@@ -17,7 +17,7 @@ func DefaultRetryer(next RoundTripper) RoundTripper {
 			rehttp.RetryStatuses(http.StatusTooEarly, http.StatusTooManyRequests),
 			rehttp.RetryStatusInterval(http.StatusInternalServerError, 999),
 		),
-		rehttp.ExpJitterDelay(time.Second, 10*time.Second),
+		rehttp.ExpJitterDelay(100*time.Millisecond, time.Second),
 	)
 }
 

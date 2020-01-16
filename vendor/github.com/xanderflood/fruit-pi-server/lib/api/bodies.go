@@ -20,6 +20,7 @@ type GetDeviceTokenRequest struct {
 //ConfigureDeviceRequest encodes a single request for user registration
 type ConfigureDeviceRequest struct {
 	DeviceUUID string          `json:"device_uuid" binding:"required"`
+	Name       string          `json:"name"`
 	Config     json.RawMessage `json:"config" binding:"required"`
 }
 

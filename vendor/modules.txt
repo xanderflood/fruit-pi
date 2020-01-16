@@ -1,7 +1,5 @@
 # github.com/PuerkitoBio/rehttp v1.0.0
 github.com/PuerkitoBio/rehttp
-# github.com/davecgh/go-spew v1.1.1
-github.com/davecgh/go-spew/spew
 # github.com/hpcloud/tail v1.0.1-0.20180514194441-a1dbeea552b7
 github.com/hpcloud/tail
 github.com/hpcloud/tail/ratelimiter
@@ -44,11 +42,9 @@ github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
-# github.com/pkg/errors v0.8.0
-github.com/pkg/errors
 # github.com/stianeikeland/go-rpio v3.0.1-0.20180606224349-3abdd2207d33+incompatible
 github.com/stianeikeland/go-rpio
-# github.com/xanderflood/fruit-pi-server v0.0.0-20200101004512-2753b9cc39ea
+# github.com/xanderflood/fruit-pi-server v0.0.0-20200116220127-48f926c96789
 github.com/xanderflood/fruit-pi-server/lib/api
 # golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
 golang.org/x/net/html
