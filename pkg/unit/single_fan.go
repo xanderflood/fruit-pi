@@ -63,7 +63,7 @@ func NewSingleFanUnit(
 	c SingleFanConfig,
 	client api.API,
 	log tools.Logger,
-) SingleFanUnit {
+) *SingleFanUnit {
 	unit := SingleFanUnit{
 		SingleFanConfig: c,
 		state:           &SingleFanUnitState{},
@@ -76,14 +76,17 @@ func NewSingleFanUnit(
 	unit.fan = relay.New(rpio.Pin(c.FanRelay), true)
 	unit.hum = relay.New(rpio.Pin(c.HumidifierRelay), true)
 
-	return unit
+	return &unit
 }
 
-func (c SingleFanUnit) SetState(state interface{}) {
+func (c *SingleFanUnit) SetState(state interface{}) {
 	c.state = state.(*SingleFanUnitState)
 }
+func (c *SingleFanUnit) GetState() interface{} {
+	return c.state
+}
 
-func (c SingleFanUnit) Refresh() error {
+func (c *SingleFanUnit) Refresh() error {
 	tempK, err := c.temp.Read()
 	if err != nil {
 		return fmt.Errorf("failed to check htg temperature sensor state: %w", err)

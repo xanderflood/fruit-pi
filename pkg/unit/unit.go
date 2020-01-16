@@ -17,6 +17,7 @@ type UnitBuilder interface {
 type Unit interface {
 	Refresh() error
 	SetState(interface{})
+	GetState() interface{}
 }
 
 var Units = map[string]UnitBuilder{

@@ -18,7 +18,6 @@ func New(
 	return &Device{
 		client: client,
 		log:    log,
-		state:  map[string]interface{}{},
 	}
 }
 
@@ -29,7 +28,6 @@ type Device struct {
 	lastConfigPoll time.Time
 
 	units map[string]unit.Unit
-	state map[string]interface{}
 }
 
 func (d *Device) Refresh(ctx context.Context) {
@@ -44,26 +42,10 @@ func (d *Device) Refresh(ctx context.Context) {
 	d.log.Debugf("refreshing %v units", len(d.units))
 	for name, unit := range d.units {
 		d.log.Debugf("refreshing unit %s", name)
-		state := d.state[name]
 
 		//if this unit has stored state, use it.
 		//this step is typically redundant.
-		var err error
-		if state != nil {
-			func() {
-				defer func() {
-					if r := recover(); r != nil {
-						err = fmt.Errorf("failed setting stored state: %v", r)
-					}
-				}()
-				unit.SetState(state)
-			}()
-			if err != nil {
-				d.log.Error(err)
-			}
-		}
-
-		err = unit.Refresh()
+		err := unit.Refresh()
 		if err != nil {
 			d.log.Error(err)
 		}
@@ -88,6 +70,7 @@ func (d *Device) refreshUnits(ctx context.Context) error {
 		return fmt.Errorf("failed to parse device config: %w", err)
 	}
 
+	oldUnits := d.units
 	d.units = map[string]unit.Unit{}
 	for name, cfg := range rawConfig {
 		builder, err := unit.GetBlankUnitBuilder(cfg.Type)
@@ -95,9 +78,25 @@ func (d *Device) refreshUnits(ctx context.Context) error {
 			return err
 		}
 
-		d.units[name], err = (*builder).BuildFromJSON([]byte(cfg.Config), d.client, d.log)
+		unit, err := (*builder).BuildFromJSON([]byte(cfg.Config), d.client, d.log)
 		if err != nil {
 			return err
+		}
+
+		d.units[name] = unit
+		if oldUnit, ok := oldUnits[name]; ok {
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						err = fmt.Errorf("failed setting stored state: %v", r)
+					}
+					unit.SetState(oldUnit.GetState())
+				}()
+				return
+			}()
+			if err != nil {
+				d.log.Error(err)
+			}
 		}
 	}
 

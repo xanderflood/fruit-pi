@@ -60,7 +60,7 @@ func NewDummyUnit(
 	c DummyConfig,
 	client api.API,
 	log tools.Logger,
-) DummyUnit {
+) *DummyUnit {
 	unit := DummyUnit{
 		DummyConfig: c,
 		state:       &DummyUnitState{},
@@ -71,14 +71,17 @@ func NewDummyUnit(
 	unit.fan = relay.New(rpio.Pin(c.FanRelay), true)
 	unit.hum = relay.New(rpio.Pin(c.HumidifierRelay), true)
 
-	return unit
+	return &unit
 }
 
-func (c DummyUnit) SetState(state interface{}) {
+func (c *DummyUnit) SetState(state interface{}) {
 	c.state = state.(*DummyUnitState)
 }
+func (c *DummyUnit) GetState() interface{} {
+	return c.state
+}
 
-func (c DummyUnit) Refresh() error {
+func (c *DummyUnit) Refresh() error {
 	hum := c.FakeHum
 	if c.state.Humidifier {
 		c.state.Humidifier = hum < c.HumOff

@@ -43,7 +43,7 @@ func NewRelayDummyUnit(
 	c RelayDummyConfig,
 	client api.API,
 	log tools.Logger,
-) RelayDummyUnit {
+) *RelayDummyUnit {
 	unit := RelayDummyUnit{
 		RelayDummyConfig: c,
 		client:           client,
@@ -53,12 +53,15 @@ func NewRelayDummyUnit(
 	unit.fan = relay.New(rpio.Pin(c.FanRelay), true)
 	unit.hum = relay.New(rpio.Pin(c.HumidifierRelay), true)
 
-	return unit
+	return &unit
 }
 
-func (c RelayDummyUnit) SetState(state interface{}) {}
+func (c *RelayDummyUnit) SetState(state interface{}) {}
+func (c *RelayDummyUnit) GetState() interface{} {
+	return nil
+}
 
-func (c RelayDummyUnit) Refresh() error {
+func (c *RelayDummyUnit) Refresh() error {
 	c.hum.Set(c.HumidifierState)
 	c.fan.Set(c.FanState)
 
