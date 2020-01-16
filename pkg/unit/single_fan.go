@@ -21,7 +21,7 @@ type SingleFanConfig struct {
 
 	TemperatureCelciusADC int `json:"temp_adc"`
 	RelativeHumidityADC   int `json:"rh_adc"`
-	// VoltageCalibrationADC int `json:"vcc_adc"`
+	VoltageCalibrationADC int `json:"vcc_adc"`
 
 	HumOn  float64         `json:"hum_on"`
 	HumOff float64         `json:"hum_off"`
@@ -71,7 +71,7 @@ func NewSingleFanUnit(
 		log:             log,
 	}
 
-	unit.temp = htg3535ch.NewDefaultTemperatureK(c.TemperatureCelciusADC)
+	unit.temp = htg3535ch.NewCalibrationTemperatureK(c.TemperatureCelciusADC, c.VoltageCalibrationADC)
 	unit.humidity = htg3535ch.NewHumidity(c.RelativeHumidityADC)
 	unit.fan = relay.New(rpio.Pin(c.FanRelay), true)
 	unit.hum = relay.New(rpio.Pin(c.HumidifierRelay), true)
