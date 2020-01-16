@@ -17,9 +17,12 @@ func New(
 	client api.Client,
 	log tools.Logger,
 ) *Device {
+	initialConfig := json.RawMessage("{}")
 	return &Device{
 		client: client,
 		log:    log,
+
+		lastDeviceState: api.Device{Config: &initialConfig},
 	}
 }
 
