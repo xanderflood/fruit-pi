@@ -12,9 +12,6 @@ import (
 )
 
 //TODO make the state refreshes asynchronous (but atomic)
-//TODO add a timeout around the API interaction, or maybe
-// just less aggressive retry rules, since it gets retried
-// anyways
 
 func New(
 	client api.Client,

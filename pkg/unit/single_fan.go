@@ -114,18 +114,19 @@ func (c *SingleFanUnit) Refresh() error {
 		}
 	}
 
-	c.log.Info("Humidity    (%): %v", hum)
-	c.log.Info("Temperature (C): %v", tempK-273.15)
-	_, err = c.client.InsertReading(context.Background(), tempK, hum)
-	if err != nil {
-		return fmt.Errorf("record sensor state: %w", err)
-	}
+	c.log.Info("Humidity    (%):", hum)
+	c.log.Info("Temperature (C):", tempK-273.15)
 
 	c.hum.Set(c.state.Humidifier)
 	c.fan.Set(c.state.Fan)
 
 	c.log.Info("hum:", c.state.Humidifier)
 	c.log.Info("fan:", c.state.Fan)
+
+	_, err = c.client.InsertReading(context.Background(), tempK, hum)
+	if err != nil {
+		return fmt.Errorf("record sensor state: %w", err)
+	}
 
 	return nil
 }
