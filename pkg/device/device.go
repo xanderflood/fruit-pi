@@ -25,7 +25,8 @@ type Device struct {
 	client api.Client
 	log    tools.Logger
 
-	lastConfigPoll time.Time
+	lastConfigPoll  time.Time
+	lastDeviceState api.Device
 
 	units map[string]unit.Unit
 }
@@ -58,14 +59,10 @@ type unitDescription struct {
 }
 
 func (d *Device) refreshUnits(ctx context.Context) error {
-	dState, err := d.client.GetDeviceConfig(ctx)
-	if err != nil {
-		d.log.Error(err)
-		return fmt.Errorf("failed to get device config: %w", err)
-	}
+	d.tryRefreshDeviceState(ctx)
 
 	rawConfig := map[string]unitDescription{}
-	err = json.Unmarshal([]byte(*dState.Config), &rawConfig)
+	err := json.Unmarshal([]byte(*d.lastDeviceState.Config), &rawConfig)
 	if err != nil {
 		return fmt.Errorf("failed to parse device config: %w", err)
 	}
@@ -101,4 +98,13 @@ func (d *Device) refreshUnits(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (d *Device) tryRefreshDeviceState(ctx context.Context) {
+	device, err := d.client.GetDeviceConfig(ctx)
+	if err != nil {
+		d.log.Error(err)
+		return
+	}
+	d.lastDeviceState = device
 }
