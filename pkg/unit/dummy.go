@@ -23,6 +23,8 @@ type DummyConfig struct {
 	HumidifierRelay int `json:"humidifier_relay"`
 	FanRelay        int `json:"fan_rly"`
 
+	NoRelay bool `json:"no_relay"`
+
 	FakeTemp float64 `json:"fake_temp"`
 	FakeHum  float64 `json:"fake_hum"`
 }
@@ -68,8 +70,10 @@ func NewDummyUnit(
 		log:         log,
 	}
 
-	unit.fan = relay.New(rpio.Pin(c.FanRelay), true)
-	unit.hum = relay.New(rpio.Pin(c.HumidifierRelay), true)
+	if !c.NoRelay {
+		unit.fan = relay.New(rpio.Pin(c.FanRelay), true)
+		unit.hum = relay.New(rpio.Pin(c.HumidifierRelay), true)
+	}
 
 	return &unit
 }
@@ -107,8 +111,10 @@ func (c *DummyUnit) Refresh() error {
 		return fmt.Errorf("record sensor state: %w", err)
 	}
 
-	c.hum.Set(c.state.Humidifier)
-	c.fan.Set(c.state.Fan)
+	if !c.NoRelay {
+		c.hum.Set(c.state.Humidifier)
+		c.fan.Set(c.state.Fan)
+	}
 
 	c.log.Info("hum:", c.state.Humidifier)
 	c.log.Info("fan:", c.state.Fan)

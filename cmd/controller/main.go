@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -16,13 +15,13 @@ import (
 )
 
 var opts struct {
-	Host                   string `long:"fruit-pi-host" env:"FRUIT_PI_HOST" required:"true"`
-	Token                  string `long:"fruit-pi-token" env:"FRUIT_PI_TOKEN" required:"true"`
-	SkipGPIOInitialization bool   `long:"skip-gpio-initialization" env:"SKIP_GPIO_INITIALIZATION" optional:"true"`
+	Host                     string `long:"fruit-pi-host" env:"FRUIT_PI_HOST" required:"true"`
+	Token                    string `long:"fruit-pi-token" env:"FRUIT_PI_TOKEN" required:"true"`
+	StatePersistenceLocation string `long:"state-persistence-location" env:"STATE_PERSISTENCE_LOCATION" default:"./config.json"`
+	SkipGPIOInitialization   bool   `long:"skip-gpio-initialization" env:"SKIP_GPIO_INITIALIZATION" optional:"true"`
 }
 
 func main() {
-	fmt.Println("Loading configuration...")
 	_, err := flags.Parse(&opts)
 	if err != nil {
 		log.Fatal(err)
@@ -43,10 +42,17 @@ func main() {
 	)
 	dvc := device.New(client, logger)
 
-	for {
-		fmt.Println("Refreshing chamber")
-		dvc.Refresh(context.Background())
-
-		time.Sleep(time.Second)
+	err = dvc.Start(
+		context.Background(),
+		opts.StatePersistenceLocation,
+		5*time.Second,
+		10*time.Second,
+	)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	//permenantly pause this goroutine
+	<-make(chan interface{})
+	return
 }

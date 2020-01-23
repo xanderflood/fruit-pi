@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/xanderflood/fruit-pi-server/lib/api"
@@ -11,18 +13,13 @@ import (
 	"github.com/xanderflood/fruit-pi/pkg/unit"
 )
 
-//TODO make the state refreshes asynchronous (but atomic)
-
 func New(
 	client api.Client,
 	log tools.Logger,
 ) *Device {
-	initialConfig := json.RawMessage("{}")
 	return &Device{
 		client: client,
 		log:    log,
-
-		lastDeviceState: api.Device{Config: &initialConfig},
 	}
 }
 
@@ -30,32 +27,80 @@ type Device struct {
 	client api.Client
 	log    tools.Logger
 
-	lastConfigPoll  time.Time
-	lastDeviceState api.Device
+	lastConfigPoll time.Time
+	deviceConfig   []byte
 
 	units map[string]unit.Unit
 }
 
-func (d *Device) Refresh(ctx context.Context) {
-	if time.Since(d.lastConfigPoll) > 10*time.Second {
-		d.log.Debug("refreshing list of units")
-		if err := d.refreshUnits(ctx); err != nil {
-			d.log.Error(err.Error())
-			return
-		}
+func (d *Device) Start(
+	ctx context.Context,
+	file string,
+	fetch time.Duration,
+	refresh time.Duration,
+) (err error) {
+	err = d.loadDeviceConfig(ctx, file)
+	if err != nil {
+		return
 	}
 
-	d.log.Debugf("refreshing %v units", len(d.units))
-	for name, unit := range d.units {
-		d.log.Debugf("refreshing unit %s", name)
+	return d.startDaemon(ctx, file, fetch, refresh)
+}
 
-		//if this unit has stored state, use it.
-		//this step is typically redundant.
-		err := unit.Refresh()
-		if err != nil {
-			d.log.Error(err)
-		}
+func (d *Device) startDaemon(
+	ctx context.Context,
+	file string,
+	fetch time.Duration,
+	refresh time.Duration,
+) error {
+	err := d.tryRecoverState(ctx, file)
+	if err != nil {
+		return fmt.Errorf("failed loading initial state from file: %w", err)
 	}
+
+	go func() {
+		fetchTicker := time.NewTicker(fetch)
+		refreshTicker := time.NewTicker(refresh)
+
+		for {
+			select {
+			case <-fetchTicker.C:
+				d.log.Info("fetching config")
+				if ok := d.tryRefreshDeviceConfig(ctx); ok {
+					d.log.Info("rebuilding list of units")
+					err := d.refreshUnits(ctx)
+					if err != nil {
+						d.log.Infof("failed refreshing units: %s", err.Error())
+						continue
+					}
+					d.persistState(ctx, file)
+				}
+
+				d.log.Info("draining fetch")
+				for len(fetchTicker.C) > 0 {
+					d.log.Info("draining fetch")
+					<-fetchTicker.C
+				}
+
+			case <-refreshTicker.C:
+				d.log.Infof("refreshing units")
+				for name, unit := range d.units {
+					d.log.Infof("refreshing unit %s", name)
+					err := unit.Refresh()
+					if err != nil {
+						d.log.Error(err)
+					}
+				}
+
+				d.log.Info("draining ticker")
+				for len(refreshTicker.C) > 0 {
+					d.log.Info("draining ticker")
+					<-refreshTicker.C
+				}
+			}
+		}
+	}()
+	return nil
 }
 
 type unitDescription struct {
@@ -63,17 +108,110 @@ type unitDescription struct {
 	Config json.RawMessage `json:"config"`
 }
 
-func (d *Device) refreshUnits(ctx context.Context) error {
-	d.tryRefreshDeviceState(ctx)
+func (d *Device) tryRefreshDeviceConfig(ctx context.Context) bool {
+	device, err := d.client.GetDeviceConfig(ctx)
+	if err != nil {
+		d.log.Error(err)
+		return false
+	}
+	d.log.Info("fetched")
+	d.deviceConfig = *device.Config
+	return true
+}
 
+func (d *Device) loadDeviceConfig(ctx context.Context, file string) error {
+	f, err := os.Open(file)
+	if err != nil {
+		if os.IsNotExist(err) {
+			d.log.Infof("no config file - using empty config")
+			d.deviceConfig = []byte(`{}`)
+			return nil
+		}
+		return err
+	}
+	defer f.Close()
+
+	d.deviceConfig, err = ioutil.ReadAll(f)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type deviceState struct {
+	Config json.RawMessage        `json:"config"`
+	Units  map[string]interface{} `json:"state"`
+}
+
+func (d *Device) persistState(ctx context.Context, file string) error {
+	var s deviceState
+	s.Config = json.RawMessage(d.deviceConfig)
+	s.Units = map[string]interface{}{}
+
+	for name, _ := range d.units {
+		s.Units[name] = d.units[name].GetState()
+	}
+
+	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE, 0755)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	err = json.NewEncoder(f).Encode(s)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Device) tryRecoverState(ctx context.Context, file string) error {
+	f, err := os.Open(file)
+	if os.IsNotExist(err) {
+		d.log.Infof("config file %s not found, starting from empty config", file)
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	var s deviceState
+	err = json.NewDecoder(f).Decode(&s)
+	if err != nil {
+		return err
+	}
+
+	d.deviceConfig = s.Config
+	err = d.refreshUnits(ctx)
+	if err != nil {
+		return err
+	}
+
+	for name, _ := range d.units {
+		innerErr := setStateSafely(d.units[name], s.Units[name])
+		if err != nil {
+			err = innerErr
+		}
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Device) refreshUnits(ctx context.Context) error {
 	rawConfig := map[string]unitDescription{}
-	err := json.Unmarshal([]byte(*d.lastDeviceState.Config), &rawConfig)
+	err := json.Unmarshal([]byte(d.deviceConfig), &rawConfig)
 	if err != nil {
 		return fmt.Errorf("failed to parse device config: %w", err)
 	}
 
 	oldUnits := d.units
-	d.units = map[string]unit.Unit{}
+	newUnits := map[string]unit.Unit{}
 	for name, cfg := range rawConfig {
 		builder, err := unit.GetBlankUnitBuilder(cfg.Type)
 		if err != nil {
@@ -85,31 +223,29 @@ func (d *Device) refreshUnits(ctx context.Context) error {
 			return err
 		}
 
-		d.units[name] = unit
+		newUnits[name] = unit
 		if oldUnit, ok := oldUnits[name]; ok {
-			func() {
-				defer func() {
-					if r := recover(); r != nil {
-						err = fmt.Errorf("failed setting stored state: %v", r)
-					}
-					unit.SetState(oldUnit.GetState())
-				}()
-				return
-			}()
+			err = setStateSafely(unit, oldUnit.GetState())
 			if err != nil {
 				d.log.Error(err)
 			}
 		}
 	}
 
+	d.units = newUnits
 	return nil
 }
 
-func (d *Device) tryRefreshDeviceState(ctx context.Context) {
-	device, err := d.client.GetDeviceConfig(ctx)
-	if err != nil {
-		d.log.Error(err)
-		return
-	}
-	d.lastDeviceState = device
+func setStateSafely(unit unit.Unit, state interface{}) error {
+	var err error
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("failed setting stored state: %v", r)
+			}
+		}()
+		unit.SetState(state)
+	}()
+
+	return err
 }

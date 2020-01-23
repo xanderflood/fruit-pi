@@ -9,3 +9,4 @@ config/*
 
 cmd/api/api
 .env
+**/config.json
