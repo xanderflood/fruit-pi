@@ -32,7 +32,7 @@ sudo systemctl start fruit-pi.service
 
 echo << EOF
 The fruit-pi service has been successfully installed. It
-will continue to fail unless and until file `~/.env` is
+will continue to fail unless and until file \`~/.env\` is
 created which declares suitable environment variables. At
 present, the required variables are:
 
