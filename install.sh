@@ -10,7 +10,7 @@ sudo pip3 install adafruit-circuitpython-ads1x15
 
 make build
 
-sudo cat << EOF > /etc/systemd/system/fruit-pi.service
+sudo tee /etc/systemd/system/fruit-pi.service << EOF
 [Unit]
 Description=Fruit-Pi
 After=network.target
