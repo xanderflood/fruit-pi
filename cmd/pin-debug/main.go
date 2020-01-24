@@ -1,13 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	flags "github.com/jessevdk/go-flags"
+	"github.com/stianeikeland/go-rpio"
 	"github.com/xanderflood/fruit-pi/lib/tools"
 	"github.com/xanderflood/fruit-pi/pkg/gpio"
 )
@@ -36,30 +35,17 @@ func main() {
 	if err := gpio.Setup(); err != nil {
 		log.Fatal(err)
 	}
-	pin := gpio.New(opts.Pin)
+	pin := rpio.Pin(opts.Pin)
 
 	logger := tools.NewStdoutLogger(tools.LogLevelDebug, "send")
-	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
-		fmt.Printf("> ")
-		scanner.Scan()
+		logger.Infof("true")
+		gpio.Set(pin, true)
+		time.Sleep(time.Second)
 
-		seq, err := gpio.ToSequence(scanner.Text())
-		if err != nil {
-			logger.Error(err)
-			continue
-		}
-		logger.Infof("EXECUTING:", seq.String())
-
-		gpio.Execute(pin, seq)
-		response, err := gpio.Monitor(pin, seq.NextState(), Timeout)
-		if err != nil {
-			logger.Error(err)
-			continue
-		}
-
-		logger.Infof("GOT RESPONSE:")
-		logger.Infof(response.String())
+		logger.Infof("false")
+		gpio.Set(pin, false)
+		time.Sleep(time.Second)
 	}
 }

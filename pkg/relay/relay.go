@@ -4,39 +4,25 @@ import "github.com/xanderflood/fruit-pi/pkg/gpio"
 
 //Relay a relay module
 type Relay interface {
-	On()
-	Off()
+	Set(bool)
 }
 
-//Impl standard relay implementation
-type Impl struct {
-	pin    gpio.Pin
-	highOn bool
+//RelayAgent standard relay implementation
+type RelayAgent struct {
+	pin      gpio.OutputPin
+	inverted bool
 }
 
 //New control a relay
-func New(pin gpio.Pin) *Impl {
-	pin.Output()
-
-	return &Impl{
-		pin: pin,
+func New(pin gpio.OutputPin, inverted bool) *RelayAgent {
+	return &RelayAgent{
+		pin:      pin,
+		inverted: inverted,
 	}
 }
 
 //On turn the relay on
-func (r *Impl) On() {
-	if r.highOn {
-		r.pin.High()
-	} else {
-		r.pin.Low()
-	}
-}
-
-//Off turn the relay off
-func (r *Impl) Off() {
-	if r.highOn {
-		r.pin.High()
-	} else {
-		r.pin.Low()
-	}
+func (r *RelayAgent) Set(on bool) {
+	val := (on != r.inverted) //xor
+	gpio.Set(r.pin, val)
 }

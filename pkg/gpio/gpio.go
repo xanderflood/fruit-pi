@@ -3,7 +3,6 @@ package gpio
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/stianeikeland/go-rpio"
 )
@@ -40,54 +39,66 @@ func Setup() error {
 	return rpio.Open()
 }
 
-//Pin minimal interface for a GPIO pin
-//go:generate counterfeiter . Pin
-type Pin interface {
-	Input()
+//OutputPin minimal interface for a GPIO pin
+//go:generate counterfeiter . OutputPin
+type OutputPin interface {
 	Output()
 	High()
 	Low()
+}
+
+//InputPin minimal interface for a GPIO pin
+//go:generate counterfeiter . InputPin
+type InputPin interface {
+	Input()
 	Read() rpio.State
 }
 
-//PinAgent wrapper around rpio.Pin
-type PinAgent struct {
-	rpio.Pin
+//Pin minimal interface for a GPIO pin
+//go:generate counterfeiter . Pin
+type Pin interface {
+	OutputPin
+	InputPin
 }
 
-//New open a handler for a specific GPIO pin
-func New(pin int) Pin {
-	return rpio.Pin(pin)
-}
-
-//Set set the state of a GPIO pin
-func Set(pin Pin, state State) {
-	if state == Low {
-		pin.Low()
-	} else {
+//Set sets the state of the pin
+func Set(pin OutputPin, high bool) {
+	pin.Output()
+	if high {
 		pin.High()
+	} else {
+		pin.Low()
 	}
 }
 
-//WaitChange wait until the pin reliably reads `mode`, returning the elapsed duration
-//If `timeout` ms elapse in the meantime, returns an error instead
-func WaitChange(pin Pin, mode rpio.State, timeout time.Duration) (elapsed time.Duration, ok bool) {
-	start := time.Now()
+// //Set set the state of a GPIO pin
+// func Set(pin Pin, state State) {
+// 	if state == Low {
+// 		pin.Low()
+// 	} else {
+// 		pin.High()
+// 	}
+// }
 
-	for {
-		elapsed = time.Now().Sub(start)
+// //WaitChange wait until the pin reliably reads `mode`, returning the elapsed duration
+// //If `timeout` ms elapse in the meantime, returns an error instead
+// func WaitChange(pin Pin, mode rpio.State, timeout time.Duration) (elapsed time.Duration, ok bool) {
+// 	start := time.Now()
 
-		if elapsed > timeout {
-			return
-		}
+// 	for {
+// 		elapsed = time.Now().Sub(start)
 
-		a := pin.Read()
-		b := pin.Read()
-		c := pin.Read()
+// 		if elapsed > timeout {
+// 			return
+// 		}
 
-		if (a == b) && (b == c) && (c == mode) {
-			ok = true
-			return
-		}
-	}
-}
+// 		a := pin.Read()
+// 		b := pin.Read()
+// 		c := pin.Read()
+
+// 		if (a == b) && (b == c) && (c == mode) {
+// 			ok = true
+// 			return
+// 		}
+// 	}
+// }
