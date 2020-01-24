@@ -2,15 +2,15 @@
 set -x
 set -e
 
-apt-get update
-apt-get upgrade
-apt-get install python3-pip
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install python3-pip
 pip3 install adafruit-circuitpython-lis3dh
 pip3 install adafruit-circuitpython-ads1x15
 
 make build
 
-cat << EOF > /etc/systemd/system/fruit-pi.service
+sudo cat << EOF > /etc/systemd/system/fruit-pi.service
 [Unit]
 Description=Fruit-Pi
 After=network.target
@@ -27,8 +27,8 @@ User=pi
 WantedBy=multi-user.target
 EOF
 
-systemctl enable fruit-pi.service
-systemctl start fruit-pi.service
+sudo systemctl enable fruit-pi.service
+sudo systemctl start fruit-pi.service
 
 echo << EOF
 The fruit-pi service has been successfully installed. It
