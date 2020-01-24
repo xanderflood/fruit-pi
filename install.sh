@@ -5,8 +5,8 @@ set -e
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install python3-pip
-pip3 install adafruit-circuitpython-lis3dh
-pip3 install adafruit-circuitpython-ads1x15
+sudo pip3 install adafruit-circuitpython-lis3dh
+sudo pip3 install adafruit-circuitpython-ads1x15
 
 make build
 
