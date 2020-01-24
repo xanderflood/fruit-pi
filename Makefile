@@ -9,3 +9,7 @@ $(commands):
 	cd ./build/$@ && godotenv -f ../../.env ./$@
 
 gen: ; go generate ./...
+
+build:
+	go build cmd/$@/main.go
+	mv main build/$@/$@
