@@ -29,6 +29,7 @@ EOF
 
 sudo systemctl enable fruit-pi.service
 sudo systemctl start fruit-pi.service
+sudo systemctl status fruit-pi.service
 
 echo << EOF
 The fruit-pi service has been successfully installed. It
