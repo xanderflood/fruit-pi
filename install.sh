@@ -8,7 +8,11 @@ sudo apt-get install python3-pip
 sudo pip3 install adafruit-circuitpython-lis3dh
 sudo pip3 install adafruit-circuitpython-ads1x15
 
-# TODO install go if necessary
+if [[ ! `go version` = *go1.12.* ]]; then
+	wget https://dl.google.com/go/go1.13.7.linux-armv6l.tar.gz
+	sudo tar -C /usr/local -xzf go1.13.7.linux-armv6l.tar.gz
+fi
+
 /usr/local/go/bin/go build -o build/controller/controller ./cmd/controller/main.go
 
 sudo tee /etc/systemd/system/fruit-pi.service << EOF
