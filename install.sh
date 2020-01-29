@@ -8,7 +8,8 @@ sudo apt-get install python3-pip
 sudo pip3 install adafruit-circuitpython-lis3dh
 sudo pip3 install adafruit-circuitpython-ads1x15
 
-go build -o build/controller/controller ./cmd/controller/main.go
+# TODO install go if necessary
+/usr/local/go/bin/go build -o build/controller/controller ./cmd/controller/main.go
 
 sudo tee /etc/systemd/system/fruit-pi.service << EOF
 [Unit]
