@@ -11,5 +11,4 @@ $(commands):
 gen: ; go generate ./...
 
 build:
-	go build cmd/$@/main.go
-	mv main build/$@/$@
+	go build -o build/controller/controller cmd/controller/main.go
