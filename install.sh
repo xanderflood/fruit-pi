@@ -27,15 +27,16 @@ User=pi
 WantedBy=multi-user.target
 EOF
 
-if sudo systemctl status fruit-pi.service;
-then sudo systemctl restart fruit-pi.service;
+if sudo systemctl status --no-pager fruit-pi.service; then
+	sudo systemctl daemon-reload
+	sudo systemctl restart fruit-pi.service
 else
 	sudo systemctl enable fruit-pi.service
 	sudo systemctl start fruit-pi.service
 fi
 
 # check whether it's up
-sudo systemctl status fruit-pi.service
+sudo systemctl status --no-pager fruit-pi.service
 
 echo << EOF
 The fruit-pi service has been successfully installed. It
