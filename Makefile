@@ -1,7 +1,5 @@
 commands := $(shell ls cmd/ | awk '{split($$0,a,"/"); print a[1]}' | tr '\n' ' ')
 
-all: $(commands)
-
 $(commands):
 	@echo "Building command $@"
 	go build cmd/$@/main.go
@@ -9,6 +7,3 @@ $(commands):
 	cd ./build/$@ && godotenv -f ../../.env ./$@
 
 gen: ; go generate ./...
-
-build:
-	go build -o build/controller/controller cmd/controller/main.go
