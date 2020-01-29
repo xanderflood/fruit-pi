@@ -27,8 +27,14 @@ User=pi
 WantedBy=multi-user.target
 EOF
 
-sudo systemctl enable fruit-pi.service
-sudo systemctl start fruit-pi.service
+if sudo systemctl status fruit-pi.service;
+then sudo systemctl restart fruit-pi.service;
+else
+	sudo systemctl enable fruit-pi.service
+	sudo systemctl start fruit-pi.service
+fi
+
+# check whether it's up
 sudo systemctl status fruit-pi.service
 
 echo << EOF
