@@ -8,7 +8,12 @@ sudo apt-get install python3-pip
 sudo pip3 install adafruit-circuitpython-lis3dh
 sudo pip3 install adafruit-circuitpython-ads1x15
 
-go build -o build/controller/controller ./cmd/controller/main.go
+if [[ ! `go version` = *go1.12.* ]]; then
+	wget https://dl.google.com/go/go1.13.7.linux-armv6l.tar.gz
+	sudo tar -C /usr/local -xzf go1.13.7.linux-armv6l.tar.gz
+fi
+
+/usr/local/go/bin/go build -o build/controller/controller ./cmd/controller/main.go
 
 sudo tee /etc/systemd/system/fruit-pi.service << EOF
 [Unit]
@@ -27,15 +32,16 @@ User=pi
 WantedBy=multi-user.target
 EOF
 
-if sudo systemctl status fruit-pi.service;
-then sudo systemctl restart fruit-pi.service;
+if sudo systemctl status --no-pager fruit-pi.service; then
+	sudo systemctl daemon-reload
+	sudo systemctl restart fruit-pi.service
 else
 	sudo systemctl enable fruit-pi.service
 	sudo systemctl start fruit-pi.service
 fi
 
 # check whether it's up
-sudo systemctl status fruit-pi.service
+sudo systemctl status --no-pager fruit-pi.service
 
 echo << EOF
 The fruit-pi service has been successfully installed. It
