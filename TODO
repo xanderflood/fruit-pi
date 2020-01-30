@@ -1,0 +1,15 @@
+steps to building a system from config:
+=======================================
+
+1) build a list of unitDescriptions, which now has an extra inputs field
+2) use that field to build a DAG
+3) walk through the DAG building a goroutine stage for each one
+- unit implementation should stay as simple as it is now, simpler even
+- instead, units should have an "Act" function that returns all it's outputs in a map[string]interface{}
+- all the goroutine/channel stuff should happen in a generic wrapper
+- each node caches the outputs of each of its dependencies, and re-publishes its own state whenever one of them updates
+4) the whole pipeline/dag should be cancellable, but remember that the individual units are stateful, and state should be preserved
+
+NOTE: when storing state, go by both name and type instead of just name, as an extra safeguard against type switche
+
+Open question: how does the transition to a new state system work? do we tear down the old first? how do we build a new one tentatively without having it conflict with the others?

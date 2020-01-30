@@ -1,0 +1,69 @@
+DATA FLOW CANONICAL EXAMPLE
+===========================
+
+{
+    "device_uuid": "47d4a717-0ffc-442b-a0ac-16bfeefc864a",
+    "config": {
+		"fan-timer" {
+			"type": "cycle-timer",
+			"config" {
+				"duration_on": "5s",
+				"duration_off": "3s"
+			}
+		},
+		"fan-relay" {
+			"type": "relay",
+			"inputs": {
+				"condition": "fan-timer.state"
+			},
+			"config" {
+				"fan_rly": 27
+			}
+		}
+
+		"light-timer" {
+			"type": "schedule-timer",
+			"config" {
+				"time_on": "07:00",
+				"time_off": "09:00"
+			}
+		},
+		"light-relay" {
+			"type": "relay",
+			"inputs": {
+				"condition": "light-timer.state"
+			},
+			"config" {
+				"fan_rly": "TODO"
+			}
+		}
+
+		"t-h-sensor" {
+			"type": "htg3535ch",
+			"config" {
+                "temp_adc": 0,
+                "rh_adc": 1,
+                "vcc_adc": 2
+			}
+		},
+		"humidifier-control" {
+			"type": "upward-trigger",
+			"inputs": {
+				"value": "t-h-sensor.r"
+			},
+			"config" {
+                "on_thresh": 80.0,
+                "off_thresh": 90.0
+			}
+		}
+		"humidifier-relay" {
+			"type": "relay",
+			"inputs": {
+				"condition": "humidifier-control.state"
+			},
+			"config" {
+				"hum_rly": 17
+			}
+		}
+    }
+}
