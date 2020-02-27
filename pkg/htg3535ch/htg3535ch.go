@@ -1,6 +1,7 @@
 package htg3535ch
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/xanderflood/fruit-pi/pkg/ads1115"
@@ -38,16 +39,19 @@ func NewTemperatureK(tPin int, batchResistanceOhms float64, vccVolts func() (flo
 //value to a temperature reading in Kelvins.
 func (s TemperatureK) Read() (float64, error) {
 	v, err := s.TempADS.ReadVoltage()
+	fmt.Println("Voltage", v)
 	if err != nil {
 		return 0, err
 	}
 
 	vcc, err := s.VCCVolts()
+	fmt.Println("VCC", vcc)
 	if err != nil {
 		return 0, err
 	}
 
 	ntcResistanceOhms := s.BatchResistanceOhms * v / (vcc - v)
+	fmt.Println("ntcResistanceOhms", ntcResistanceOhms)
 	logR := math.Log(ntcResistanceOhms)
 	temp := 1 / (8.61393e-04 + 2.56377e-04*logR + 1.68055e-07*logR*logR*logR)
 	return temp, nil
