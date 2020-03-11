@@ -2,9 +2,9 @@
 set -x
 set -e
 
-sudo apt-get update
-sudo apt-get upgrade
-sudo apt-get install python3-pip
+sudo apt-get update -y
+sudo apt-get upgrade -y
+sudo apt-get install python3-pip -y
 sudo pip3 install adafruit-circuitpython-lis3dh
 sudo pip3 install adafruit-circuitpython-ads1x15
 
