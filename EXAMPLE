@@ -2,8 +2,28 @@ DATA FLOW CANONICAL EXAMPLE
 ===========================
 
 {
-    "device_uuid": "47d4a717-0ffc-442b-a0ac-16bfeefc864a",
-    "config": {
+	"version": 1,
+    "uuid": "47d4a717-0ffc-442b-a0ac-16bfeefc864a",
+    "units": {
+		"ticker" {
+			"type": "ticker",
+			"config" {
+				"interval": "5s"
+			}
+		},
+		"log" {
+			"type": "log",
+			"inputs": {
+				"trigger": "ticker.tick"
+			}
+		}
+	}
+}
+
+{
+	"version": 1,
+    "uuid": "47d4a717-0ffc-442b-a0ac-16bfeefc864a",
+    "units": {
 		"fan-timer" {
 			"type": "cycle-timer",
 			"config" {

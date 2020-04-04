@@ -10,6 +10,8 @@ import (
 )
 
 ////////////////
+// https://kropochev.com/downloads/humidity/AM2301.pdf
+//
 // this is a golang port of the C library found at:
 // https://github.com/kporembinski/DHT21-AM2301/blob/master/am2301.c
 ////////////////
@@ -141,12 +143,8 @@ func (am *Impl) Read() ([5]byte, error) {
 
 //Parse parse a State from a 5-byte input stream
 func Parse(vals [5]byte) (State, error) {
-	//TODO test this using the examples on page 5 of
-	//https://kropochev.com/downloads/humidity/AM2301.pdf
-
 	// Verify checksum
 	if vals[0]+vals[1]+vals[2]+vals[3] != vals[4] {
-		//TODO log these somewhere
 		return State{}, errors.New("invalid checksum")
 	}
 

@@ -1,6 +1,7 @@
 package unit
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -32,4 +33,17 @@ func GetBlankUnitBuilder(kind string) (*UnitBuilder, error) {
 		return nil, fmt.Errorf("unsupported unit type identifier `%s`", kind)
 	}
 	return &builder, nil
+}
+
+type ChannelSpec struct {
+	Name      string
+	NoCaching bool
+}
+
+type UnitV2 interface {
+	GetState() interface{}
+	SetState(interface{})
+
+	Start(ctx context.Context, inputs map[string]Input, outputs map[string]Output) <-chan struct{}
+	Stop()
 }
