@@ -1,6 +1,7 @@
 package device
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -153,14 +154,12 @@ func (d *Device) persistState(ctx context.Context, file string) error {
 		s.Units[name] = d.units[name].GetState()
 	}
 
-	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE, 0755)
-	if err != nil {
+	buf := bytes.NewBuffer(nil)
+	if err := json.NewEncoder(buf).Encode(s); err != nil {
 		return err
 	}
-	defer f.Close()
 
-	err = json.NewEncoder(f).Encode(s)
-	if err != nil {
+	if err := ioutil.WriteFile(file, buf.Bytes(), 0644); err != nil {
 		return err
 	}
 
