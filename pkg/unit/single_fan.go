@@ -16,8 +16,8 @@ import (
 
 //SingleFanConfig is a standard unit config
 type SingleFanConfig struct {
-	HumidifierRelay int `json:"humidifier_relay"`
-	FanRelay        int `json:"fan_rly"`
+	HumRelay int `json:"hum_relay"`
+	FanRelay int `json:"fan_rly"`
 
 	TemperatureCelciusADC int `json:"temp_adc"`
 	RelativeHumidityADC   int `json:"rh_adc"`
@@ -27,6 +27,9 @@ type SingleFanConfig struct {
 	HumOff float64         `json:"hum_off"`
 	FanOn  config.Duration `json:"fan_on"`
 	FanOff config.Duration `json:"fan_off"`
+
+	InvertHumPin bool `json:"invert_hum_pin"`
+	InvertFanPin bool `json:"invert_fan_pin"`
 }
 
 //SingleFanUnit is a standard unit implementation
@@ -73,8 +76,8 @@ func NewSingleFanUnit(
 
 	unit.temp = htg3535ch.NewCalibrationTemperatureK(c.TemperatureCelciusADC, c.VoltageCalibrationADC)
 	unit.humidity = htg3535ch.NewHumidity(c.RelativeHumidityADC)
-	unit.fan = relay.New(rpio.Pin(c.FanRelay), true)
-	unit.hum = relay.New(rpio.Pin(c.HumidifierRelay), true)
+	unit.fan = relay.New(rpio.Pin(c.FanRelay), c.InvertFanPin)
+	unit.hum = relay.New(rpio.Pin(c.HumRelay), c.InvertHumPin)
 
 	return &unit
 }
