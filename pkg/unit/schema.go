@@ -51,32 +51,40 @@ type TypeConfig interface {
 }
 
 type Config struct {
-	Type   string                     `json:"type"`
-	Config TypeConfig                 `json:"config"`
-	Inputs map[string]ValueIdentifier `json:"inputs"`
+	Type   string
+	Config TypeConfig
+	Inputs map[string]ValueIdentifier
 }
 
 func (c *Config) UnmarshalJSON(bs []byte) error {
-	var typName struct {
-		Type string `json:"type"`
+	var configHelper struct {
+		Type       string                     `json:"type"`
+		ConfigJSON json.RawMessage            `json:"config"`
+		Inputs     map[string]ValueIdentifier `json:"inputs"`
 	}
 
-	err := json.Unmarshal(bs, &typName)
+	err := json.Unmarshal(bs, &configHelper)
 	if err != nil {
 		return err
 	}
 
-	schema, ok := GetSchema(typName.Type)
+	schema, ok := GetSchema(configHelper.Type)
 	if !ok {
-		return fmt.Errorf("unregistered unit type `%s`", typName.Type)
+		return fmt.Errorf("unregistered unit type `%s`", configHelper.Type)
+	}
+
+	if len(configHelper.ConfigJSON) == 0 {
+		configHelper.ConfigJSON = []byte("{}")
 	}
 
 	c.Config = schema.GetEmptyConfigPointer()
-	err = json.Unmarshal(bs, c)
+	err = json.Unmarshal(configHelper.ConfigJSON, &c.Config)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed parsing inner unit config: %s", err)
 	}
 
+	c.Type = configHelper.Type
+	c.Inputs = configHelper.Inputs
 	return nil
 }
 

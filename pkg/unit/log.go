@@ -10,7 +10,7 @@ func init() {
 	RegisterUnitType("log", Schema{
 		GetEmptyConfigPointer: func() TypeConfig { return &LogConfig{} },
 		Inputs: map[string]struct{}{
-			"trigger": struct{}{},
+			"trigger": {},
 		},
 		Outputs: map[string]OutputSchema{},
 	})

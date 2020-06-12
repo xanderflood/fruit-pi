@@ -12,7 +12,7 @@ func init() {
 		GetEmptyConfigPointer: func() TypeConfig { return &TickerConfig{} },
 		Inputs:                map[string]struct{}{},
 		Outputs: map[string]OutputSchema{
-			"tick": OutputSchema{
+			"tick": {
 				NoCaching: true,
 			},
 		},
