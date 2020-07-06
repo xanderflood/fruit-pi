@@ -13,7 +13,7 @@ func init() {
 		GetEmptyConfigPointer: func() TypeConfig { return &JSONServerConfig{} },
 		Inputs:                map[string]struct{}{},
 		Outputs: map[string]OutputSchema{
-			"triggered": {
+			"value": {
 				NoCaching: true,
 			},
 		},
@@ -32,14 +32,17 @@ type JSONServer struct {
 	cfg JSONServerConfig
 	srv *http.Server
 
-	triggered Output
+	value Output
 }
 
 func (unit *JSONServer) Start(ctx context.Context, _ map[string]Input, outputs map[string]Output) <-chan struct{} {
+	fmt.Println("HERE")
 	done := make(chan struct{}, 1)
 
 	unit.srv = &http.Server{Addr: fmt.Sprintf(":%v", unit.cfg.Port)}
-	unit.triggered = outputs["triggered"]
+	unit.value = outputs["value"]
+
+	unit.srv.Handler = http.HandlerFunc(unit.handleRequest)
 
 	go func() {
 		defer close(done)
@@ -58,7 +61,7 @@ func (unit *JSONServer) handleRequest(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
-	unit.triggered<-val
+	unit.value <- val
 
 	return
 }

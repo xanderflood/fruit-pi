@@ -3,7 +3,6 @@ package unit
 import (
 	"context"
 	"fmt"
-	"time"
 )
 
 func init() {
@@ -38,8 +37,8 @@ func (lu *Log) Start(ctx context.Context, inputs map[string]Input, _ map[string]
 			select {
 			case <-cCtx.Done():
 				break
-			case <-inputs["trigger"]:
-				fmt.Println(time.Now().Format(time.RFC3339))
+			case val := <-inputs["trigger"]:
+				fmt.Println(val)
 			}
 		}
 	}()

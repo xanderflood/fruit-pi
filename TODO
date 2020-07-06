@@ -1,10 +1,16 @@
-steps to building a system from config:
-=======================================
+- Write some interior logic processing units
+- Write alertint units (twilio)
 
-4) the whole pipeline/dag should be cancellable, but remember that the individual units are stateful, and state should be preserved
+- Write go scripts that spin up Devices in docker containers and use ghttps to test things out
 
-Have various "output back to the fruit-pi server" units:
-1) bool_alert -> Twilio
-2) float_alert -> Twilio
-3) json_state -> (assembles a single JSON string output composed from many other unit outputs and states, and upserts it with a timestamp to a dynamodb table)
-# also, invent an "alert" unit (or several for different types of trigger) that uses a new "alert" endpoint on the fruit-pi-server, maybe to push a text message or something?
+
+In greater detail:
+1) implement the following units:
+Utility Units:
+- Some internal logic
+- SMS (Twilio)
+- Email
+- Calculator (takes arbitrarily many subscriptions, and an arithmetic expression)
+Electronics units:
+- Relay
+- HTG sensor

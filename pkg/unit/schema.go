@@ -32,7 +32,13 @@ func (c ValueIdentifier) String() string {
 }
 
 func (c *ValueIdentifier) UnmarshalJSON(bs []byte) error {
-	parts := strings.Split(string(bs), ".")
+	// use JSON marshalling to unquote the string we received
+	var strVal string
+	if err := json.Unmarshal(bs, &strVal); err != nil {
+		return err
+	}
+
+	parts := strings.Split(strVal, ".")
 	if len(parts) != 2 {
 		return errors.New("malformed value identifier - should be <unit>.<output>")
 	}
@@ -90,7 +96,7 @@ func (c *Config) UnmarshalJSON(bs []byte) error {
 
 // TODO should _all_ of this, including broadcast and subscription
 // be moved into pkg/device?
-// then pkg/unit only knows about `<-chan<- Value` and UnitV2
+// then pkg/unit only knows about `chan Value` and UnitV2
 
 func (c Config) Build(
 	ctx context.Context, unitName string,
@@ -98,14 +104,13 @@ func (c Config) Build(
 ) (unit UnitV2, newBroadcasts Broadcasts, newSubscriptions Subscriptions, err error) {
 	schema, ok := GetSchema(c.Type)
 	if !ok {
-		err = errors.New("unregistered type TODO")
+		err = fmt.Errorf("unregistered type `%s`", c.Type)
 		return
 	}
 
 	newSubscriptions = Subscriptions{}
 	declared := map[string]bool{}
 	for inputName, valID := range c.Inputs {
-
 		sourceUnit, ok := broadcastsSoFar[valID.Unit]
 		if !ok {
 			err = fmt.Errorf("reference to undeclared unit %s", valID.Unit)

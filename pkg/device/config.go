@@ -24,9 +24,15 @@ func (cfg Config) BuildGraph() (Graph, error) {
 
 		*node.Value = newNode(uName, u)
 		nodes[uName] = node
+	}
 
+	for uName, u := range cfg.Units {
+		node := nodes[uName]
 		for field, source := range u.Inputs {
-			g.MakeEdge(nodes[source.Unit], node)
+			if err := g.MakeEdge(nodes[source.Unit], node); err != nil {
+				// should be inaccessible
+				return Graph{}, err
+			}
 
 			if len(outgoingEdges[source.Unit]) == 0 {
 				outgoingEdges[source.Unit] = edge{}
@@ -41,21 +47,28 @@ func (cfg Config) BuildGraph() (Graph, error) {
 		}
 	}
 
-	// check for cycles
+	if err := cfg.assertAcyclic(g, len(nodes)); err != nil {
+		return Graph{}, err
+	}
+
+	return Graph{Graph: g}, nil
+}
+
+func (cfg Config) assertAcyclic(g *graph.Graph, numNodes int) error {
 	components := g.StronglyConnectedComponents()
-	if len(nodes) != len(components) {
+	if numNodes != len(components) {
 		for _, component := range components {
 			if len(component) > 1 {
 				names := make([]string, len(component))
 				for i := range component {
 					names[i] = (*component[i].Value).(*Node).name
 				}
-				return Graph{}, fmt.Errorf("circular reference:\n%s", strings.Join(names, "\n"))
+				return fmt.Errorf("circular reference:\n%s", strings.Join(names, "\n"))
 			}
 		}
 
-		return Graph{}, fmt.Errorf("INACCESSIBLE POINT")
+		return fmt.Errorf("INACCESSIBLE POINT")
 	}
 
-	return Graph{Graph: g}, nil
+	return nil
 }

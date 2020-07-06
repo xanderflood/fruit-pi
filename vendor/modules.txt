@@ -80,6 +80,14 @@ github.com/onsi/gomega/types
 github.com/opencontainers/go-digest
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
+# github.com/robertkrimen/otto v0.0.0-20191219234010-c382bd3c16ff
+github.com/robertkrimen/otto
+github.com/robertkrimen/otto/ast
+github.com/robertkrimen/otto/dbg
+github.com/robertkrimen/otto/file
+github.com/robertkrimen/otto/parser
+github.com/robertkrimen/otto/registry
+github.com/robertkrimen/otto/token
 # github.com/stianeikeland/go-rpio v3.0.1-0.20180606224349-3abdd2207d33+incompatible
 github.com/stianeikeland/go-rpio
 # github.com/twmb/algoimpl v0.0.0-20170717182524-076353e90b94
@@ -116,6 +124,9 @@ golang.org/x/text/runes
 golang.org/x/text/transform
 # gopkg.in/fsnotify/fsnotify.v1 v1.4.7
 gopkg.in/fsnotify/fsnotify.v1
+# gopkg.in/sourcemap.v1 v1.0.5
+gopkg.in/sourcemap.v1
+gopkg.in/sourcemap.v1/base64vlq
 # gopkg.in/tomb.v1 v1.0.0-20140529071818-c131134a1947
 gopkg.in/tomb.v1
 # gopkg.in/yaml.v2 v2.2.2
