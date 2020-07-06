@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	golog "log"
 	"time"
 
 	"github.com/stianeikeland/go-rpio"
+	"gopkg.in/alexcesaro/statsd.v2"
+
 	"github.com/xanderflood/fruit-pi-server/lib/api"
 	"github.com/xanderflood/fruit-pi/lib/config"
 	"github.com/xanderflood/fruit-pi/lib/tools"
@@ -19,9 +22,11 @@ type SingleFanConfig struct {
 	HumRelay int `json:"hum_relay"`
 	FanRelay int `json:"fan_rly"`
 
-	TemperatureCelciusADC int `json:"temp_adc"`
-	RelativeHumidityADC   int `json:"rh_adc"`
-	VoltageCalibrationADC int `json:"vcc_adc"`
+	TemperatureCelciusADC int    `json:"temp_adc"`
+	RelativeHumidityADC   int    `json:"rh_adc"`
+	VoltageCalibrationADC int    `json:"vcc_adc"`
+	StatsDAddress         string `json:"statsd_address"`
+	Name                  string `json:"name"`
 
 	HumOn  float64         `json:"hum_on"`
 	HumOff float64         `json:"hum_off"`
@@ -42,6 +47,7 @@ type SingleFanUnit struct {
 	fan      relay.Relay
 	hum      relay.Relay
 
+	stats  *statsd.Client
 	client api.API
 	log    tools.Logger
 }
@@ -72,12 +78,25 @@ func NewSingleFanUnit(
 		state:           &SingleFanUnitState{},
 		client:          client,
 		log:             log,
+		temp:            htg3535ch.NewCalibrationTemperatureK(c.TemperatureCelciusADC, c.VoltageCalibrationADC),
+		humidity:        htg3535ch.NewHumidity(c.RelativeHumidityADC),
+		fan:             relay.New(rpio.Pin(c.FanRelay), c.InvertFanPin),
+		hum:             relay.New(rpio.Pin(c.HumRelay), c.InvertHumPin),
 	}
 
-	unit.temp = htg3535ch.NewCalibrationTemperatureK(c.TemperatureCelciusADC, c.VoltageCalibrationADC)
-	unit.humidity = htg3535ch.NewHumidity(c.RelativeHumidityADC)
-	unit.fan = relay.New(rpio.Pin(c.FanRelay), c.InvertFanPin)
-	unit.hum = relay.New(rpio.Pin(c.HumRelay), c.InvertHumPin)
+	stats, err := statsd.New(
+		statsd.Mute(len(c.StatsDAddress) == 0),
+		statsd.Address(c.StatsDAddress),
+		statsd.Tags(
+			"name", c.Name,
+		),
+		statsd.ErrorHandler(func(err error) { fmt.Println(err.Error()) }),
+	)
+	if err != nil {
+		golog.Fatal(err)
+	}
+
+	unit.stats = stats
 
 	return &unit
 }
@@ -90,6 +109,8 @@ func (c *SingleFanUnit) GetState() interface{} {
 }
 
 func (c *SingleFanUnit) Refresh() error {
+	defer c.stats.Flush()
+
 	tempK, err := c.temp.Read()
 	if err != nil {
 		return fmt.Errorf("failed to check htg temperature sensor state: %w", err)
@@ -117,8 +138,9 @@ func (c *SingleFanUnit) Refresh() error {
 		}
 	}
 
+	tempC := tempK - 273.15
 	c.log.Info("Humidity    (%):", hum)
-	c.log.Info("Temperature (C):", tempK-273.15)
+	c.log.Info("Temperature (C):", tempC)
 
 	c.hum.Set(c.state.Humidifier)
 	c.fan.Set(c.state.Fan)
@@ -126,10 +148,23 @@ func (c *SingleFanUnit) Refresh() error {
 	c.log.Info("hum:", c.state.Humidifier)
 	c.log.Info("fan:", c.state.Fan)
 
+	c.stats.Gauge("rh_percent", hum)
+	c.stats.Gauge("temp_c", tempC)
+	c.stats.Gauge("humidifier", boolToGuage(c.state.Humidifier))
+	c.stats.Gauge("fan", boolToGuage(c.state.Fan))
+
+	// TODO remove?
 	_, err = c.client.InsertReading(context.Background(), tempK, hum)
 	if err != nil {
 		return fmt.Errorf("record sensor state: %w", err)
 	}
 
 	return nil
+}
+
+func boolToGuage(v bool) int {
+	if v {
+		return 1
+	}
+	return 0
 }
