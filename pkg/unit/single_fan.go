@@ -85,11 +85,9 @@ func NewSingleFanUnit(
 	}
 
 	stats, err := statsd.New(
+		statsd.Prefix("fruitpi."+c.Name),
 		statsd.Mute(len(c.StatsDAddress) == 0),
 		statsd.Address(c.StatsDAddress),
-		statsd.Tags(
-			"name", c.Name,
-		),
 		statsd.ErrorHandler(func(err error) { fmt.Println(err.Error()) }),
 	)
 	if err != nil {
