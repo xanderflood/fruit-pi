@@ -11,6 +11,7 @@ require (
 	github.com/onsi/gomega v1.4.1
 	github.com/stianeikeland/go-rpio v3.0.1-0.20180606224349-3abdd2207d33+incompatible
 	github.com/xanderflood/fruit-pi-server v0.0.0-20200116220127-48f926c96789
+	gopkg.in/alexcesaro/statsd.v2 v2.0.0
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20140529071818-c131134a1947 // indirect
 )
