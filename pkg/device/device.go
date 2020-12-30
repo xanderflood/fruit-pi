@@ -54,10 +54,10 @@ func (d *Device) startDaemon(
 	fetch time.Duration,
 	refresh time.Duration,
 ) error {
-	err := d.tryRecoverState(ctx, file)
-	if err != nil {
-		return fmt.Errorf("failed loading initial state from file: %w", err)
-	}
+	// err := d.tryRecoverState(ctx, file)
+	// if err != nil {
+	// 	return fmt.Errorf("failed loading initial state from file: %w", err)
+	// }
 
 	d.log.Info("rebuilding list of units")
 	if err := d.refreshUnits(ctx); err != nil {
