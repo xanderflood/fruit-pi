@@ -59,29 +59,35 @@ func (d *Device) startDaemon(
 		return fmt.Errorf("failed loading initial state from file: %w", err)
 	}
 
+	d.log.Info("rebuilding list of units")
+	if err := d.refreshUnits(ctx); err != nil {
+		d.log.Infof("failed refreshing units: %s", err.Error())
+		return fmt.Errorf("failed to initialize units: %w", err)
+	}
+
 	go func() {
-		fetchTicker := time.NewTicker(fetch)
+		// fetchTicker := time.NewTicker(fetch)
 		refreshTicker := time.NewTicker(refresh)
 
 		for {
 			select {
-			case <-fetchTicker.C:
-				d.log.Info("fetching config")
-				if ok := d.tryRefreshDeviceConfig(ctx); ok {
-					d.log.Info("rebuilding list of units")
-					err := d.refreshUnits(ctx)
-					if err != nil {
-						d.log.Infof("failed refreshing units: %s", err.Error())
-						continue
-					}
-					d.persistState(ctx, file)
-				}
+			// case <-fetchTicker.C:
+			// 	d.log.Info("fetching config")
+			// 	if ok := d.tryRefreshDeviceConfig(ctx); ok {
+			// 		d.log.Info("rebuilding list of units")
+			// 		err := d.refreshUnits(ctx)
+			// 		if err != nil {
+			// 			d.log.Infof("failed refreshing units: %s", err.Error())
+			// 			continue
+			// 		}
+			// 		d.persistState(ctx, file)
+			// 	}
 
-				d.log.Info("draining fetch")
-				for len(fetchTicker.C) > 0 {
-					d.log.Info("draining fetch")
-					<-fetchTicker.C
-				}
+			// 	d.log.Info("draining fetch")
+			// 	for len(fetchTicker.C) > 0 {
+			// 		d.log.Info("draining fetch")
+			// 		<-fetchTicker.C
+			// 	}
 
 			case <-refreshTicker.C:
 				d.log.Infof("refreshing units")
@@ -150,7 +156,7 @@ func (d *Device) persistState(ctx context.Context, file string) error {
 	s.Config = json.RawMessage(d.deviceConfig)
 	s.Units = map[string]interface{}{}
 
-	for name, _ := range d.units {
+	for name := range d.units {
 		s.Units[name] = d.units[name].GetState()
 	}
 
@@ -189,7 +195,7 @@ func (d *Device) tryRecoverState(ctx context.Context, file string) error {
 		return err
 	}
 
-	for name, _ := range d.units {
+	for name := range d.units {
 		innerErr := setStateSafely(d.units[name], s.Units[name])
 		if err != nil {
 			err = innerErr
